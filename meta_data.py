@@ -431,7 +431,7 @@ def model_select(modelname):
         The models in sklearn with corresponding parameters.
     """
 
-    if modelname not in ['KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBDT']:
+    if modelname not in ['KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBDT', 'ABC', 'ABR']:
         raise ValueError("There is no " + modelname)
 
     if modelname == 'KNN':
@@ -532,3 +532,27 @@ def model_select(modelname):
                         for mf in max_features_parameter:
                             models.append(GradientBoostingClassifier(loss=l, learning_rate=le, n_estimators=n, max_depth=md, max_features=mf))
         return models    
+
+    if modelname == 'ABC':
+        from sklearn.ensemble import AdaBoostClassifier
+        models = []
+        learning_rate_parameter = [0.02, 0.05, 0.1, 0.15]
+        n_estimators_parameter = [40, 70, 110, 150, 200, 250, 300]
+        algorithm_parameter = ['SAMME', 'SAMME.R']
+        for le in learning_rate_parameter:
+            for n in n_estimators_parameter:
+                for a in algorithm_parameter:
+                    models.append(AdaBoostClassifier(learning_rate=le, n_estimators=n, algorithm=a))
+        return models    
+
+    if modelname == 'ABR':
+        from sklearn.ensemble import AdaBoostRegressor
+        models = []
+        learning_rate_parameter = [0.02, 0.05, 0.1, 0.15]
+        n_estimators_parameter = [40, 70, 110, 150, 200, 250, 300]
+        loss_parameter = ['linear', 'square', 'exponential']
+        for le in learning_rate_parameter:
+            for n in n_estimators_parameter:
+                for l in loss_parameter:
+                    models.append(AdaBoostRegressor(learning_rate=le, n_estimators=n, loss=l))
+        return models  

@@ -17,7 +17,7 @@ _, cluster_center_index = dataset.get_cluster_center()
 N = 10
 
 # 'KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBDT'
-modelnames = ['DTR']
+modelnames = ['ABC', 'ABR']
 metadata = []
 perf_impr = []
 for t in range(2):
@@ -47,7 +47,7 @@ for t in range(2):
 
                 model_i = copy.deepcopy(model)
                 model_i.fit(X[l_ind], y[l_ind].ravel())
-                if modelname in ['RFR', 'DTR']:
+                if modelname in ['RFR', 'DTR', 'ABR']:
                     i_output = model_i.predict(X)
                 else:
                     i_output = (model_i.predict_proba(X)[:, 1] - 0.5) * 2
@@ -70,7 +70,7 @@ for t in range(2):
 
                 model_j = copy.deepcopy(model)
                 model_j.fit(X[j_l_ind], y[j_l_ind].ravel())
-                if modelname in ['RFR', 'DTR']:
+                if modelname in ['RFR', 'DTR', 'ABR']:
                     j_output = model_j.predict(X)
                 else:
                     j_output = (model_j.predict_proba(X)[:, 1] - 0.5) * 2
