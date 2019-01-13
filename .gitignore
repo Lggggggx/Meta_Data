@@ -8,3 +8,5 @@ LALmodel2
 *.txt
 *.csv
 *.pyc
+*.npy
+*.zip

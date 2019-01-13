@@ -3,12 +3,14 @@ Meta features designing for binary classification tasks
  in the pool based active learning scenario.
 """
 import os
+import copy
 import h5py
 import numpy as np 
 
 from sklearn.cluster import KMeans
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.preprocessing import minmax_scale
+
 
 def randperm(n, k=None):
     """Generate a random array which contains k elements range from (n[0]:n[1])
@@ -52,6 +54,7 @@ def randperm(n, k=None):
     randarr = np.arange(start, end + 1)
     np.random.shuffle(randarr)
     return randarr[0:k]
+
 
 class DataSet():
     """
@@ -98,8 +101,9 @@ class DataSet():
         -------
         data_cluster_centers: np.ndarray
             The samples in origin dataset X is the closest to the cluster_centers.
+
         index_cluster_centers: np.ndarray
-            The index corresponding to the samples in origin data set.     
+            The cluster centers index corresponding to the samples in origin data set.     
         """
         # if self.distance is None:
         #     self.get_distance()
@@ -195,11 +199,11 @@ class DataSet():
         unlabel_idx = []
         for i in range(split_count):
             rp = randperm(number_of_instance - 1)
-            cutpoint = round((1 - test_ratio) * len(rp))
+            cutpoint = int((1 - test_ratio) * len(rp))
             tp_train = instance_indexes[rp[0:cutpoint]]
             train_idx.append(tp_train)
             test_idx.append(instance_indexes[rp[cutpoint:]])
-            cutpoint = round(initial_label_rate * len(tp_train))
+            cutpoint = int(initial_label_rate * len(tp_train))
             if cutpoint <= 1:
                 cutpoint = 1
             label_idx.append(tp_train[0:cutpoint])
@@ -314,6 +318,8 @@ def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs
     """
     if(np.any(cluster_center_index == -1)):
         raise IndexError("cluster_center_index is wrong")
+    if len(label_indexs) != len(modelOutput) or len(unlabel_indexs) != len(modelOutput) or len(unlabel_indexs) != len(label_indexs):
+        raise ValueError("the shape of {label_indexs, unlabel_indexs, modelOutput} is inconsonant")
     for i in range(5):
         assert(np.shape(X)[0] == np.shape(modelOutput[i])[0]) 
         if(not isinstance(label_indexs[i], np.ndarray)):
@@ -414,6 +420,7 @@ def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs
 
     metadata = np.hstack((n_feature, ratio_label_positive, ratio_label_negative, \
          ratio_unlabel_positive, ratio_unlabel_negative, distance_query_data, model_infor, fdata))
+    metadata = np.array([metadata])
     return metadata
 
 
@@ -423,7 +430,7 @@ def model_select(modelname):
     ----------
     modelname: str
         The name of model.
-        'KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBDT'
+        'KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBDT', 'ABC', 'ABR'
 
     Returns
     -------
@@ -437,7 +444,7 @@ def model_select(modelname):
     if modelname == 'KNN':
         from sklearn.neighbors import KNeighborsClassifier 
         models = []
-        n_neighbors_parameter = [5, 8, 11, 14, 17, 20]
+        n_neighbors_parameter = [3, 5, 8, 11, 14]
         algorithm_parameter = ['auto', 'ball_tree', 'kd_tree', 'brute']
         leaf_size_parameter = [20, 25, 30, 35, 40, 45, 50]
         p_parameter = [1, 2, 3]
@@ -556,3 +563,114 @@ def model_select(modelname):
                 for l in loss_parameter:
                     models.append(AdaBoostRegressor(learning_rate=le, n_estimators=n, loss=l))
         return models  
+    
+
+def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, tests, label_inds, unlabel_inds, split_count, num_xjselect):
+    """calculate the designed mate data. 
+    Parameters
+    ----------
+    X: 2D array, optional (default=None) [n_samples, n_features]
+        Feature matrix of the whole dataset. It is a reference which will not use additional memory.
+
+    y: array-like, optional (default=None) [n_samples]
+        Label matrix of the whole dataset. It is a reference which will not use additional memory.
+    
+    distance_martix: 2D
+        D[i][j] reprensts the distance between X[i] and X[j].
+
+    cluster_center_index: np.ndarray
+        The cluster centers index corresponding to the samples in origin data set. 
+
+    modelname: str
+    The name of model.
+    'KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBDT', 'ABC', 'ABR'
+
+    train_idx: list
+        index of training set, shape like [n_split_count, n_training_indexes]
+
+    test_idx: list
+        index of testing set, shape like [n_split_count, n_testing_indexes]
+
+    label_idx: list
+        index of labeling set, shape like [n_split_count, n_labeling_indexes]
+
+    unlabel_idx: list
+        index of unlabeling set, shape like [n_split_count, n_unlabeling_indexes]
+
+    split_count: int, optional
+        Random split data _split_count times
+    
+    num_xjselect: int 
+        The number of unlabel data to select to generate the meta data.
+
+    Returns
+    -------
+    metadata: 2D
+        The meta data about the current model and dataset.[num_xjselect, 396 + 1(features + label)]
+
+    """
+    metadata = None
+    for t in range(split_count):  
+        label_inds_t = label_inds[t]
+        unlabel_inds_t = unlabel_inds[t]
+        test = tests[t]
+        for modelname in modelnames:
+            models = model_select(modelname)
+            num_models = len(models)
+            for k in range(num_models):
+                l_ind = copy.deepcopy(label_inds_t)
+                u_ind = copy.deepcopy(unlabel_inds_t)
+                model = models[k]
+                modelOutput = []
+                modelPerformance = []
+                # genearte five rounds before
+                labelindex = []
+                unlabelindex = []
+                for i in range(5):
+                    i_sampelindex = np.random.choice(u_ind)
+                    u_ind = np.delete(u_ind, np.where(u_ind == i_sampelindex)[0])
+                    l_ind = np.r_[l_ind, i_sampelindex]
+                    labelindex.append(l_ind)
+                    unlabelindex.append(u_ind)
+
+                    model_i = copy.deepcopy(model)
+                    model_i.fit(X[l_ind], y[l_ind].ravel())
+                    if modelname in ['RFR', 'DTR', 'ABR']:
+                        i_output = model_i.predict(X)
+                    else:
+                        i_output = (model_i.predict_proba(X)[:, 1] - 0.5) * 2
+                    i_prediction = np.array([1 if k>0 else -1 for k in i_output])
+                    modelOutput.append(i_output)
+                    modelPerformance.append(accuracy_score(y[test], i_prediction[test]))
+                # calualate the meta data z(designed features) and r(performance improvement) 
+                for j in range(num_xjselect):
+                    j_l_ind = copy.deepcopy(l_ind)
+                    j_u_ind = copy.deepcopy(u_ind)
+                    j_labelindex = copy.deepcopy(labelindex)
+                    j_unlabelindex = copy.deepcopy(unlabelindex)
+                    jmodelOutput = copy.deepcopy(modelOutput)
+
+                    j_sampelindex = np.random.choice(u_ind)
+                    j_u_ind = np.delete(j_u_ind, np.where(j_u_ind == j_sampelindex)[0])
+                    j_l_ind = np.r_[j_l_ind, j_sampelindex]
+                    j_labelindex.append(j_l_ind)
+                    j_unlabelindex.append(j_u_ind)
+
+                    model_j = copy.deepcopy(model)
+                    model_j.fit(X[j_l_ind], y[j_l_ind].ravel())
+                    if modelname in ['RFR', 'DTR', 'ABR']:
+                        j_output = model_j.predict(X)
+                    else:
+                        j_output = (model_j.predict_proba(X)[:, 1] - 0.5) * 2
+                    jmodelOutput.append(j_output)
+                    j_prediction = np.array([1 if k>0 else -1 for k in j_output])
+                    j_meta_data = mate_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
+                    j_perf = accuracy_score(y[test], j_prediction[test])
+                    j_perf_impr = j_perf - modelPerformance[4]
+                    j_meta_data = np.c_[j_meta_data, j_perf_impr]
+                    if metadata is None:
+                        metadata = j_meta_data
+                    else:
+                        metadata = np.vstack((metadata, j_meta_data))
+                    
+    return metadata
