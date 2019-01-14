@@ -8,7 +8,7 @@ import h5py
 import numpy as np 
 
 from sklearn.cluster import KMeans
-from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score
 from sklearn.preprocessing import minmax_scale
 
 
@@ -209,8 +209,8 @@ class DataSet():
             label_idx.append(tp_train[0:cutpoint])
             unlabel_idx.append(tp_train[cutpoint:])
 
-        # self.split_save(train_idx=train_idx, test_idx=test_idx, label_idx=label_idx,
-        #         unlabel_idx=unlabel_idx, path=saving_path)
+        self.split_save(train_idx=train_idx, test_idx=test_idx, label_idx=label_idx,
+                unlabel_idx=unlabel_idx, path=saving_path)
         return train_idx, test_idx, label_idx, unlabel_idx
 
     def split_load(self, path):

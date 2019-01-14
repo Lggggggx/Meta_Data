@@ -21,13 +21,12 @@ for datasetname in datasetnames:
     distacne = dataset.get_distance()
     _, cluster_center_index = dataset.get_cluster_center()
     print(datasetname + ' DataSet currently being processed........')
-    data = np.load('metadata.npy')
     metadata = None
     # run multiple split on the same dataset
     # every time change the value of initial_label_rate
     for i_l_r in np.arange(0.03, 0.04, 0.01, dtype=float):
         trains, tests, label_inds, unlabel_inds = dataset.split_data(test_ratio=0.3, 
-             initial_label_rate=i_l_r, split_count=split_count)
+             initial_label_rate=i_l_r, split_count=split_count, saving_path='./split')
         meta_data = cal_mate_data(X, y, distacne, cluster_center_index, modelnames,  
              trains, tests, label_inds, unlabel_inds, split_count, num_xjselect)
         if metadata is None:
@@ -35,7 +34,6 @@ for datasetname in datasetnames:
         else:
             metadata = np.vstack((metadata, meta_data))
     print(datasetname + ' is complete and saved successfully.')
-    data = np.vstack((data, metadata))
-    np.save("metadata.npy", data)
+    np.save(datasetname + "_metadata.npy", metadata)
 
 print("All done!")
