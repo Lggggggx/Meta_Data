@@ -2,7 +2,7 @@ import numpy as np
 
 from meta_data import DataSet, mate_data, model_select, cal_mate_data
 
-dataset_path = './data/'
+dataset_path = './newdata/'
 datasetnames = np.load('datasetname.npy')
 # Different types of models, each type has many models with different parameters
 modelnames = ['KNN', 'RFC', 'RFR',

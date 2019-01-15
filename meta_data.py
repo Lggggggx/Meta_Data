@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score
 from sklearn.preprocessing import minmax_scale
-
+from sklearn.model_selection import StratifiedKFold
 
 def randperm(n, k=None):
     """Generate a random array which contains k elements range from (n[0]:n[1])
@@ -150,6 +150,67 @@ class DataSet():
         self.distance = distance + distance.T
         return self.distance
     
+    def split_data_considerlabel(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='.'):
+        """Split given data considered the problem of class imbalance.
+
+        Parameters
+        ----------
+        test_ratio: float, optional (default=0.3)
+            Ratio of test set
+
+        initial_label_rate: float, optional (default=0.05)
+            Ratio of initial label set
+            e.g. Initial_labelset*(1-test_ratio)*n_samples
+
+        split_count: int, optional (default=10)
+            Random split data _split_count times
+
+        saving_path: str, optional (default='.')
+            Giving None to disable saving.
+
+        Returns
+        -------
+        train_idx: list
+            index of training set, shape like [n_split_count, n_training_indexes]
+
+        test_idx: list
+            index of testing set, shape like [n_split_count, n_testing_indexes]
+
+        label_idx: list
+            index of labeling set, shape like [n_split_count, n_labeling_indexes]
+
+        unlabel_idx: list
+            index of unlabeling set, shape like [n_split_count, n_unlabeling_indexes]
+        """
+        # check parameters
+        len_of_parameters = [len(self.X) if self.X is not None else None, len(self.y) if self.y is not None else None]
+        number_of_instance = np.unique([i for i in len_of_parameters if i is not None])
+        if len(number_of_instance) > 1:
+            raise ValueError("Different length of instances and _labels found.")
+        else:
+            number_of_instance = number_of_instance[0]
+
+        # split
+        train_idx = []
+        test_idx = []
+        label_idx = []
+        unlabel_idx = []
+
+        skf = StratifiedKFold(n_splits=split_count, shuffle=True)
+
+        for train_index, test_index in skf.split(self.X, self.y):
+            train_idx.append(train_index)
+            test_idx.append(test_index)
+            cutpoint = int(initial_label_rate * len(train_index))
+            if cutpoint <= 1:
+                cutpoint = 1
+            label_idx.append(train_index[0:cutpoint])
+            unlabel_idx.append(train_index[cutpoint:])            
+
+        # self.split_save(train_idx=train_idx, test_idx=test_idx, label_idx=label_idx,
+        #         unlabel_idx=unlabel_idx, path=saving_path)
+        return train_idx, test_idx, label_idx, unlabel_idx
+
     def split_data(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='.'):
         """Split given data.
 
@@ -209,8 +270,8 @@ class DataSet():
             label_idx.append(tp_train[0:cutpoint])
             unlabel_idx.append(tp_train[cutpoint:])
 
-        self.split_save(train_idx=train_idx, test_idx=test_idx, label_idx=label_idx,
-                unlabel_idx=unlabel_idx, path=saving_path)
+        # self.split_save(train_idx=train_idx, test_idx=test_idx, label_idx=label_idx,
+        #         unlabel_idx=unlabel_idx, path=saving_path)
         return train_idx, test_idx, label_idx, unlabel_idx
 
     def split_load(self, path):
@@ -615,62 +676,78 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
         unlabel_inds_t = unlabel_inds[t]
         test = tests[t]
         for modelname in modelnames:
+            # choose one type models
             models = model_select(modelname)
+
+            # the same type model with different parameters
             num_models = len(models)
             for k in range(num_models):
                 l_ind = copy.deepcopy(label_inds_t)
                 u_ind = copy.deepcopy(unlabel_inds_t)
                 model = models[k]
                 modelOutput = []
-                modelPerformance = []
-                # genearte five rounds before
-                labelindex = []
-                unlabelindex = []
-                for i in range(5):
-                    i_sampelindex = np.random.choice(u_ind)
-                    u_ind = np.delete(u_ind, np.where(u_ind == i_sampelindex)[0])
-                    l_ind = np.r_[l_ind, i_sampelindex]
-                    labelindex.append(l_ind)
-                    unlabelindex.append(u_ind)
+                modelPerformance = None
+                # Repeated many(20) times in the same model and split
+                for _ in range(20):
+                    # genearte five rounds before
+                    labelindex = []
+                    unlabelindex = []
+                    for i in range(5):
+                        i_sampelindex = np.random.choice(u_ind)
+                        u_ind = np.delete(u_ind, np.where(u_ind == i_sampelindex)[0])
+                        l_ind = np.r_[l_ind, i_sampelindex]
+                        labelindex.append(l_ind)
+                        unlabelindex.append(u_ind)
 
-                    model_i = copy.deepcopy(model)
-                    model_i.fit(X[l_ind], y[l_ind].ravel())
-                    if modelname in ['RFR', 'DTR', 'ABR']:
-                        i_output = model_i.predict(X)
-                    else:
-                        i_output = (model_i.predict_proba(X)[:, 1] - 0.5) * 2
-                    i_prediction = np.array([1 if k>0 else -1 for k in i_output])
-                    modelOutput.append(i_output)
-                    modelPerformance.append(accuracy_score(y[test], i_prediction[test]))
-                # calualate the meta data z(designed features) and r(performance improvement) 
-                for j in range(num_xjselect):
-                    j_l_ind = copy.deepcopy(l_ind)
-                    j_u_ind = copy.deepcopy(u_ind)
-                    j_labelindex = copy.deepcopy(labelindex)
-                    j_unlabelindex = copy.deepcopy(unlabelindex)
-                    jmodelOutput = copy.deepcopy(modelOutput)
+                        model_i = copy.deepcopy(model)
+                        model_i.fit(X[l_ind], y[l_ind].ravel())
+                        if modelname in ['RFR', 'DTR', 'ABR']:
+                            i_output = model_i.predict(X)
+                        else:
+                            i_output = (model_i.predict_proba(X)[:, 1] - 0.5) * 2
+                        i_prediction = np.array([1 if k>0 else -1 for k in i_output])
+                        modelOutput.append(i_output)
+                        i_acc = accuracy_score(y[test], i_prediction[test])
+                        i_roc = roc_auc_score(y[test], i_output[test])
+                        if modelPerformance is None:
+                            modelPerformance = np.array([i_acc, i_roc])
+                        else:
+                            modelPerformance = np.stack((modelPerformance, [i_acc, i_roc]))
+                    
+                    # calualate the meta data z(designed features) and r(performance improvement) 
+                    for j in range(num_xjselect):
+                        j_l_ind = copy.deepcopy(l_ind)
+                        j_u_ind = copy.deepcopy(u_ind)
+                        j_labelindex = copy.deepcopy(labelindex)
+                        j_unlabelindex = copy.deepcopy(unlabelindex)
+                        jmodelOutput = copy.deepcopy(modelOutput)
 
-                    j_sampelindex = np.random.choice(u_ind)
-                    j_u_ind = np.delete(j_u_ind, np.where(j_u_ind == j_sampelindex)[0])
-                    j_l_ind = np.r_[j_l_ind, j_sampelindex]
-                    j_labelindex.append(j_l_ind)
-                    j_unlabelindex.append(j_u_ind)
+                        j_sampelindex = np.random.choice(u_ind)
+                        j_u_ind = np.delete(j_u_ind, np.where(j_u_ind == j_sampelindex)[0])
+                        j_l_ind = np.r_[j_l_ind, j_sampelindex]
+                        j_labelindex.append(j_l_ind)
+                        j_unlabelindex.append(j_u_ind)
 
-                    model_j = copy.deepcopy(model)
-                    model_j.fit(X[j_l_ind], y[j_l_ind].ravel())
-                    if modelname in ['RFR', 'DTR', 'ABR']:
-                        j_output = model_j.predict(X)
-                    else:
-                        j_output = (model_j.predict_proba(X)[:, 1] - 0.5) * 2
-                    jmodelOutput.append(j_output)
-                    j_prediction = np.array([1 if k>0 else -1 for k in j_output])
-                    j_meta_data = mate_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
-                    j_perf = accuracy_score(y[test], j_prediction[test])
-                    j_perf_impr = j_perf - modelPerformance[4]
-                    j_meta_data = np.c_[j_meta_data, j_perf_impr]
-                    if metadata is None:
-                        metadata = j_meta_data
-                    else:
-                        metadata = np.vstack((metadata, j_meta_data))
+                        model_j = copy.deepcopy(model)
+                        model_j.fit(X[j_l_ind], y[j_l_ind].ravel())
+                        if modelname in ['RFR', 'DTR', 'ABR']:
+                            j_output = model_j.predict(X)
+                        else:
+                            j_output = (model_j.predict_proba(X)[:, 1] - 0.5) * 2
+                        
+                        jmodelOutput.append(j_output)
+                        j_prediction = np.array([1 if k>0 else -1 for k in j_output])
+                        # calulate the designed mate_data Z
+                        j_meta_data = mate_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
+                        # calulate the performace improvement
+                        j_acc = accuracy_score(y[test], j_prediction[test])
+                        j_roc = roc_auc_score(y[test], j_output[test])
+                        j_perf_impr = [j_acc, j_roc] - modelPerformance[4]
+
+                        j_meta_data = np.c_[j_meta_data, j_perf_impr]
+                        if metadata is None:
+                            metadata = j_meta_data
+                        else:
+                            metadata = np.vstack((metadata, j_meta_data))
                     
     return metadata
