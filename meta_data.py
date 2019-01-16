@@ -6,9 +6,10 @@ import os
 import copy
 import h5py
 import numpy as np 
+import scipy.io as sio
 
 from sklearn.cluster import KMeans
-from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score
+from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, mean_squared_error, log_loss, hinge_loss
 from sklearn.preprocessing import minmax_scale
 from sklearn.model_selection import StratifiedKFold
 
@@ -86,9 +87,12 @@ class DataSet():
         The dataset format is *.mat.
         """
         filename = dataset_path + self.dataset_name +'.mat'
-        dt = h5py.File(filename, 'r')
-        self.X = np.transpose(dt['x'])
-        self.y = np.transpose(dt['y'])
+        # dt = h5py.File(filename, 'r')
+        # self.X = np.transpose(dt['x'])
+        # self.y = np.transpose(dt['y'])
+        dt = sio.loadmat(filename)
+        self.X = dt['x']
+        self.y = dt['y']
     
     def get_cluster_center(self, n_clusters=10, method='Euclidean'):
         """Use the Kmeans in sklearn to get the cluster centers.
@@ -150,8 +154,9 @@ class DataSet():
         self.distance = distance + distance.T
         return self.distance
     
-    def split_data_considerlabel(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='.'):
-        """Split given data considered the problem of class imbalance.
+    def split_data_labelbalance(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='./split'):
+        """Split given data considered the problem of label balance.
+        The train test label unlabel sets` proportion of positive and negative categories should be consistent with the original data set.
 
         Parameters
         ----------
@@ -189,29 +194,39 @@ class DataSet():
             raise ValueError("Different length of instances and _labels found.")
         else:
             number_of_instance = number_of_instance[0]
-
+        
+        positive_ind = np.where(self.y == 1)[0]
+        negative_ind = np.where(self.y == -1)[0]
         # split
         train_idx = []
         test_idx = []
         label_idx = []
         unlabel_idx = []
-
-        skf = StratifiedKFold(n_splits=split_count, shuffle=True)
-
-        for train_index, test_index in skf.split(self.X, self.y):
-            train_idx.append(train_index)
-            test_idx.append(test_index)
-            cutpoint = int(initial_label_rate * len(train_index))
+        for i in range(split_count):
+            prp = randperm(len(positive_ind) - 1)
+            nrp = randperm(len(negative_ind) - 1)
+            p_cutpoint = int((1 - test_ratio) * len(prp))
+            n_cutpoint = int((1 - test_ratio) * len(nrp))
+            if p_cutpoint <= 1:
+                p_cutpoint = 1
+            if n_cutpoint <= 1:
+                n_cutpoint = 1
+            tp_train = np.r_[positive_ind[prp[0:p_cutpoint]], negative_ind[nrp[0:n_cutpoint]]]
+            tp_train = tp_train[randperm(len(tp_train) - 1)]
+            train_idx.append(tp_train)
+            tp_test = np.r_[positive_ind[prp[p_cutpoint:]], negative_ind[nrp[n_cutpoint:]]]
+            test_idx.append(tp_test[randperm(len(tp_test) - 1)])
+            cutpoint = int(initial_label_rate * len(tp_train))
             if cutpoint <= 1:
                 cutpoint = 1
-            label_idx.append(train_index[0:cutpoint])
-            unlabel_idx.append(train_index[cutpoint:])            
+            label_idx.append(tp_train[0:cutpoint])
+            unlabel_idx.append(tp_train[cutpoint:])
 
         # self.split_save(train_idx=train_idx, test_idx=test_idx, label_idx=label_idx,
         #         unlabel_idx=unlabel_idx, path=saving_path)
         return train_idx, test_idx, label_idx, unlabel_idx
 
-    def split_data(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='.'):
+    def split_data(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='./split'):
         """Split given data.
 
         Parameters
@@ -505,7 +520,7 @@ def model_select(modelname):
     if modelname == 'KNN':
         from sklearn.neighbors import KNeighborsClassifier 
         models = []
-        n_neighbors_parameter = [3, 5, 8, 11, 14]
+        n_neighbors_parameter = [3, 4, 5, 6]
         algorithm_parameter = ['auto', 'ball_tree', 'kd_tree', 'brute']
         leaf_size_parameter = [20, 25, 30, 35, 40, 45, 50]
         p_parameter = [1, 2, 3]
@@ -682,14 +697,14 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
             # the same type model with different parameters
             num_models = len(models)
             for k in range(num_models):
-                l_ind = copy.deepcopy(label_inds_t)
-                u_ind = copy.deepcopy(unlabel_inds_t)
                 model = models[k]
-                modelOutput = []
-                modelPerformance = None
                 # Repeated many(20) times in the same model and split
                 for _ in range(20):
                     # genearte five rounds before
+                    l_ind = copy.deepcopy(label_inds_t)
+                    u_ind = copy.deepcopy(unlabel_inds_t)
+                    modelOutput = []
+                    modelPerformance = None
                     labelindex = []
                     unlabelindex = []
                     for i in range(5):
@@ -709,10 +724,13 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
                         modelOutput.append(i_output)
                         i_acc = accuracy_score(y[test], i_prediction[test])
                         i_roc = roc_auc_score(y[test], i_output[test])
+                        i_mse = mean_squared_error(y[test], i_prediction[test])
+                        i_ll = log_loss(y[test], i_prediction[test])
+                        
                         if modelPerformance is None:
-                            modelPerformance = np.array([i_acc, i_roc])
+                            modelPerformance = np.array([i_acc, i_roc, i_mse, i_ll])
                         else:
-                            modelPerformance = np.stack((modelPerformance, [i_acc, i_roc]))
+                            modelPerformance = np.vstack((modelPerformance, [i_acc, i_roc, i_mse, i_ll]))
                     
                     # calualate the meta data z(designed features) and r(performance improvement) 
                     for j in range(num_xjselect):
@@ -730,21 +748,28 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
 
                         model_j = copy.deepcopy(model)
                         model_j.fit(X[j_l_ind], y[j_l_ind].ravel())
+                        # model`s predicted values continuous [-1, 1]
                         if modelname in ['RFR', 'DTR', 'ABR']:
                             j_output = model_j.predict(X)
                         else:
                             j_output = (model_j.predict_proba(X)[:, 1] - 0.5) * 2
-                        
                         jmodelOutput.append(j_output)
+                        # model`s prediction for label -1 or 1
                         j_prediction = np.array([1 if k>0 else -1 for k in j_output])
                         # calulate the designed mate_data Z
                         j_meta_data = mate_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
                         # calulate the performace improvement
                         j_acc = accuracy_score(y[test], j_prediction[test])
                         j_roc = roc_auc_score(y[test], j_output[test])
-                        j_perf_impr = [j_acc, j_roc] - modelPerformance[4]
-
-                        j_meta_data = np.c_[j_meta_data, j_perf_impr]
+                        j_mse = mean_squared_error(y[test], j_prediction[test])
+                        j_ll = log_loss(y[test], j_prediction[test])
+                        # model improvement on accuracy,auc
+                        j_perf_impr = [j_acc - modelPerformance[4][0]]
+                        j_perf_impr.append(j_roc - modelPerformance[4][1])
+                        # model ratio improvement on mean-squared-error,log-loss
+                        j_perf_impr.append((modelPerformance[4][2] - j_mse) / modelPerformance[4][2])
+                        j_perf_impr.append((modelPerformance[4][3] - j_ll) / modelPerformance[4][3])
+                        j_meta_data = np.c_[j_meta_data, np.array([j_perf_impr])]
                         if metadata is None:
                             metadata = j_meta_data
                         else:

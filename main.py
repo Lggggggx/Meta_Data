@@ -25,7 +25,10 @@ for datasetname in datasetnames:
     # run multiple split on the same dataset
     # every time change the value of initial_label_rate
     for i_l_r in np.arange(0.03, 0.04, 0.01, dtype=float):
-        trains, tests, label_inds, unlabel_inds = dataset.split_data(test_ratio=0.3, 
+        if datasetname in ['echocardiogram', 'heart', 'heart-statlog', 'house', 'spect', 'statlog-heart']:
+            if i_l_r <= 0.07:
+                i_l_r = 0.07
+        trains, tests, label_inds, unlabel_inds = dataset.split_data_labelbalance(test_ratio=0.3, 
              initial_label_rate=i_l_r, split_count=split_count, saving_path='./split')
         meta_data = cal_mate_data(X, y, distacne, cluster_center_index, modelnames,  
              trains, tests, label_inds, unlabel_inds, split_count, num_xjselect)

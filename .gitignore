@@ -10,3 +10,6 @@ LALmodel2
 *.pyc
 *.npy
 *.zip
+test.py
+testmodel.py
+data.py
