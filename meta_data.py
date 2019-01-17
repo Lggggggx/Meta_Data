@@ -154,7 +154,7 @@ class DataSet():
         self.distance = distance + distance.T
         return self.distance
     
-    def split_data_labelbalance(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='./split'):
+    def split_data_labelbalance(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='.'):
         """Split given data considered the problem of label balance.
         The train test label unlabel sets` proportion of positive and negative categories should be consistent with the original data set.
 
@@ -211,22 +211,25 @@ class DataSet():
                 p_cutpoint = 1
             if n_cutpoint <= 1:
                 n_cutpoint = 1
-            tp_train = np.r_[positive_ind[prp[0:p_cutpoint]], negative_ind[nrp[0:n_cutpoint]]]
+            tp_train = np.r_[positive_ind[prp[1:p_cutpoint]], negative_ind[nrp[1:n_cutpoint]]]
             tp_train = tp_train[randperm(len(tp_train) - 1)]
+            # guarantee there is at least one positive and negative instance in label_index
+            tp_train = np.r_[positive_ind[prp[0]], negative_ind[nrp[0]], tp_train]
             train_idx.append(tp_train)
             tp_test = np.r_[positive_ind[prp[p_cutpoint:]], negative_ind[nrp[n_cutpoint:]]]
             test_idx.append(tp_test[randperm(len(tp_test) - 1)])
+
             cutpoint = int(initial_label_rate * len(tp_train))
-            if cutpoint <= 1:
-                cutpoint = 1
+            if cutpoint <= 2:
+                cutpoint = 2
             label_idx.append(tp_train[0:cutpoint])
             unlabel_idx.append(tp_train[cutpoint:])
 
-        # self.split_save(train_idx=train_idx, test_idx=test_idx, label_idx=label_idx,
-        #         unlabel_idx=unlabel_idx, path=saving_path)
+        self.split_save(train_idx=train_idx, test_idx=test_idx, label_idx=label_idx,
+                unlabel_idx=unlabel_idx, initial_label_rate=initial_label_rate, path=saving_path)
         return train_idx, test_idx, label_idx, unlabel_idx
 
-    def split_data(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='./split'):
+    def split_data(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='.'):
         """Split given data.
 
         Parameters
@@ -286,10 +289,10 @@ class DataSet():
             unlabel_idx.append(tp_train[cutpoint:])
 
         # self.split_save(train_idx=train_idx, test_idx=test_idx, label_idx=label_idx,
-        #         unlabel_idx=unlabel_idx, path=saving_path)
+        #         unlabel_idx=unlabel_idx, initial_label_rate=initial_label_rate, path=saving_path)
         return train_idx, test_idx, label_idx, unlabel_idx
 
-    def split_load(self, path):
+    def split_load(self, path, datasetname, initial_label_rate):
         """Load split from path.
 
         Parameters
@@ -318,17 +321,25 @@ class DataSet():
             raise Exception("A path to a directory is expected.")
 
         ret_arr = []
-        for fname in ['train_idx.txt', 'test_idx.txt', 'label_idx.txt', 'unlabel_idx.txt']:
-            if not os.path.exists(os.path.join(saving_path, fname)):
-                if os.path.exists(os.path.join(saving_path, fname.split()[0] + '.npy')):
-                    ret_arr.append(np.load(os.path.join(saving_path, fname.split()[0] + '.npy')))
-                else:
-                    ret_arr.append(None)
+
+        for fname in ['_train_idx.npy', '_test_idx.npy', '_label_idx.npy', '_unlabel_idx.npy']:
+            if os.path.exists(os.path.join(saving_path, datasetname + initial_label_rate.__str__() + fname)):
+                ret_arr.append(np.load(os.path.join(saving_path, datasetname + initial_label_rate.__str__() + fname)))
             else:
-                ret_arr.append(np.loadtxt(os.path.join(saving_path, fname)))
+                raise ValueError("the {0} split information does not exit.".format(datasetname + initial_label_rate.__str__()))        
+
+        # for fname in ['train_idx.npy', 'test_idx.npy', 'label_idx.npy', 'unlabel_idx.npy']:
+        #     if not os.path.exists(os.path.join(saving_path, fname)):
+        #         if os.path.exists(os.path.join(saving_path, fname.split()[0] + '.npy')):
+        #             ret_arr.append(np.load(os.path.join(saving_path, fname.split()[0] + '.npy')))
+        #         else:
+        #             ret_arr.append(None)
+        #     else:
+        #         ret_arr.append(np.loadtxt(os.path.join(saving_path, fname)))
+        
         return ret_arr[0], ret_arr[1], ret_arr[2], ret_arr[3]
 
-    def split_save(self, train_idx, test_idx, label_idx, unlabel_idx, path):
+    def split_save(self, train_idx, test_idx, label_idx, unlabel_idx, initial_label_rate, path):
         """Save the split to file for auditting or loading for other methods.
 
         Parameters
@@ -346,14 +357,10 @@ class DataSet():
 
         saving_path = os.path.abspath(path)
         if os.path.isdir(saving_path):
-            np.savetxt(os.path.join(saving_path, self.dataset_name + '_train_idx.txt'), train_idx)
-            np.savetxt(os.path.join(saving_path, self.dataset_name + '_test_idx.txt'), test_idx)
-            if len(np.shape(label_idx)) == 2:
-                np.savetxt(os.path.join(saving_path, self.dataset_name + '_label_idx.txt'), label_idx)
-                np.savetxt(os.path.join(saving_path, self.dataset_name + '_unlabel_idx.txt'), unlabel_idx)
-            else:
-                np.save(os.path.join(saving_path, self.dataset_name + '_label_idx.npy'), label_idx)
-                np.save(os.path.join(saving_path, self.dataset_name + '_unlabel_idx.npy'), unlabel_idx)
+            np.save(os.path.join(saving_path, self.dataset_name + initial_label_rate.__str__() + '_train_idx.npy'), train_idx)
+            np.save(os.path.join(saving_path, self.dataset_name + initial_label_rate.__str__() + '_test_idx.npy'), test_idx)
+            np.save(os.path.join(saving_path, self.dataset_name + initial_label_rate.__str__() + '_label_idx.npy'), label_idx)
+            np.save(os.path.join(saving_path, self.dataset_name + initial_label_rate.__str__() + '_unlabel_idx.npy'), unlabel_idx)
         else:
             raise Exception("A path to a directory is expected.")
 

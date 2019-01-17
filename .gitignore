@@ -14,3 +14,4 @@ test.py
 testmodel.py
 data.py
 cal_mate_data.py
+dataset_splitinfo.py
