@@ -513,7 +513,7 @@ def model_select(modelname):
     ----------
     modelname: str
         The name of model.
-        'KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBDT', 'ABC', 'ABR'
+        'KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBC', 'ABC', 'ABR'
 
     Returns
     -------
@@ -521,7 +521,7 @@ def model_select(modelname):
         The models in sklearn with corresponding parameters.
     """
 
-    if modelname not in ['KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBDT', 'ABC', 'ABR']:
+    if modelname not in ['KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBC', 'ABC', 'ABR']:
         raise ValueError("There is no " + modelname)
 
     if modelname == 'KNN':
@@ -529,8 +529,8 @@ def model_select(modelname):
         models = []
         n_neighbors_parameter = [3, 4, 5, 6]
         algorithm_parameter = ['auto', 'ball_tree', 'kd_tree', 'brute']
-        leaf_size_parameter = [20, 25, 30, 35, 40, 45, 50]
-        p_parameter = [1, 2, 3]
+        leaf_size_parameter = [25, 30, 35]
+        p_parameter = [1, 2]
         for n in n_neighbors_parameter:
             for a in algorithm_parameter:
                 for l in leaf_size_parameter:
@@ -542,21 +542,19 @@ def model_select(modelname):
         from sklearn.linear_model import LogisticRegression
         models = []
         # penalty_parameter = ['l1', 'l2']
-        C_parameter = [1e-2, 1e-1, 0.5, 1, 1.5]
+        C_parameter = [1e-1, 0.5, 1]
         tol_parameter = [1e-5, 1e-4, 1e-3]
         solver_parameter = ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']
-        max_iter_parameter  = [50, 100, 150, 200]
         for c in C_parameter:
             for t in tol_parameter:
                 for s in solver_parameter:
-                    for m in max_iter_parameter:
-                        models.append(LogisticRegression(C=c, tol=t, solver=s, max_iter=m))
+                    models.append(LogisticRegression(C=c, tol=t, solver=s))
         return models
 
     if modelname == 'RFC':
         from sklearn.ensemble import RandomForestClassifier
         models = []
-        n_estimators_parameter = [10, 40, 70, 110, 150, 200, 250, 300]
+        n_estimators_parameter = [10, 40, 70, 110]
         max_features_parameter = ['auto', 'sqrt', 'log2', None]
         for n in n_estimators_parameter:
             for m in max_features_parameter:
@@ -566,7 +564,7 @@ def model_select(modelname):
     if modelname == 'RFR':
         from sklearn.ensemble import RandomForestRegressor
         models = []
-        n_estimators_parameter = [10, 40, 70, 110, 150, 200, 250, 300]
+        n_estimators_parameter = [10, 40, 70, 110]
         max_features_parameter = ['auto', 'sqrt', 'log2', None]
         for n in n_estimators_parameter:
             for m in max_features_parameter:
@@ -596,50 +594,50 @@ def model_select(modelname):
     if modelname == 'SVM':
         from sklearn.svm import SVC
         models = []
-        C_parameter = [1e-2, 1e-1, 0.5, 1, 1.5]
-        kernel_parameter = ['linear', 'poly', 'rbf', 'sigmoid']
-        degree_parameter = [2, 3, 4, 5]
+        C_parameter = [1e-1, 0.5, 1]
+        kernel_parameter = ['linear', 'poly', 'sigmoid']
+        # Degree of the polynomial kernel function (‘poly’). Ignored by all other kernels.
+        degree_parameter = [2, 3, 4]
         tol_parameter = [1e-5, 1e-4, 1e-3]
         for c in C_parameter:
             for k in kernel_parameter:
-                for d in degree_parameter:
-                    for t in tol_parameter:
-                        models.append(SVC(C=c ,kernel=k, degree=d, tol=t, probability=True))
+                for t in tol_parameter:
+                    if k == 'poly':             
+                        for d in degree_parameter:   
+                            models.append(SVC(C=c ,kernel=k, degree=d, tol=t, probability=True))
+                    else:
+                        models.append(SVC(C=c ,kernel=k, tol=t, probability=True))
         return models
 
-    if modelname == 'GBDT':
+    if modelname == 'GBC':
         from sklearn.ensemble import GradientBoostingClassifier
         models = []
         loss_parameter = ['deviance', 'exponential']
-        learning_rate_parameter = [0.02, 0.05, 0.1, 0.15]
-        n_estimators_parameter = [40, 70, 110, 150, 200, 250, 300]
-        max_depth_parameter = [2, 3, 5]
+        learning_rate_parameter = [0.02, 0.05, 0.1]
+        n_estimators_parameter = [40, 70, 110]
         max_features_parameter = ['auto', 'sqrt', 'log2', None]
         for l in loss_parameter:
             for le in learning_rate_parameter:
                 for n in n_estimators_parameter:
-                    for md in max_depth_parameter:
-                        for mf in max_features_parameter:
-                            models.append(GradientBoostingClassifier(loss=l, learning_rate=le, n_estimators=n, max_depth=md, max_features=mf))
+                    for mf in max_features_parameter:
+                        models.append(GradientBoostingClassifier(loss=l, learning_rate=le, n_estimators=n, max_features=mf))
         return models    
 
     if modelname == 'ABC':
         from sklearn.ensemble import AdaBoostClassifier
         models = []
-        learning_rate_parameter = [0.02, 0.05, 0.1, 0.15]
-        n_estimators_parameter = [40, 70, 110, 150, 200, 250, 300]
-        algorithm_parameter = ['SAMME', 'SAMME.R']
+        learning_rate_parameter = [0.02, 0.05, 0.1]
+        n_estimators_parameter = [40, 70, 110]
         for le in learning_rate_parameter:
             for n in n_estimators_parameter:
-                for a in algorithm_parameter:
-                    models.append(AdaBoostClassifier(learning_rate=le, n_estimators=n, algorithm=a))
+                models.append(AdaBoostClassifier(learning_rate=le, n_estimators=n))
         return models    
 
     if modelname == 'ABR':
         from sklearn.ensemble import AdaBoostRegressor
         models = []
-        learning_rate_parameter = [0.02, 0.05, 0.1, 0.15]
-        n_estimators_parameter = [40, 70, 110, 150, 200, 250, 300]
+        learning_rate_parameter = [0.02, 0.05, 0.1]
+        n_estimators_parameter = [40, 70, 110]
         loss_parameter = ['linear', 'square', 'exponential']
         for le in learning_rate_parameter:
             for n in n_estimators_parameter:

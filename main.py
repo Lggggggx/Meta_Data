@@ -5,8 +5,7 @@ from meta_data import DataSet, mate_data, model_select, cal_mate_data
 dataset_path = './newdata/'
 datasetnames = np.load('datasetname.npy')
 # Different types of models, each type has many models with different parameters
-modelnames = ['KNN', 'RFC', 'RFR',
-    'DTC', 'DTR', 'SVM', 'GBDT', 'ABC', 'ABR']
+modelnames = ['KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBC', 'ABC', 'ABR']
 
 # in the same dataset and the same ratio of initial_label_rate,the number of split.
 split_count = 10
