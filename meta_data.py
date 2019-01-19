@@ -646,6 +646,7 @@ def model_select(modelname):
     #             for l in loss_parameter:
     #                 models.append(AdaBoostRegressor(learning_rate=le, n_estimators=n, loss=l))
     #     return models  
+
     if modelname == 'KNN':
         from sklearn.neighbors import KNeighborsClassifier
         models = []
@@ -657,7 +658,7 @@ def model_select(modelname):
             for a in algorithm_parameter:
                 for l in leaf_size_parameter:
                     for p in p_parameter:
-                        models.append(KNeighborsClassifier(n_neighbors=n, algorithm=a, leaf_size=l, p=p))
+                        models.append(KNeighborsClassifier(n_neighbors=n, algorithm=a, leaf_size=l, p=p, n_jobs=-1))
         return models
 
     if modelname == 'LR':
@@ -670,7 +671,7 @@ def model_select(modelname):
         for c in C_parameter:
             for t in tol_parameter:
                 for s in solver_parameter:
-                    models.append(LogisticRegression(C=c, tol=t, solver=s))
+                    models.append(LogisticRegression(C=c, tol=t, solver=s, n_jobs=-1))
         return models
 
     if modelname == 'RFC':
@@ -680,7 +681,7 @@ def model_select(modelname):
         max_features_parameter = ['auto', 'sqrt', 'log2']
         for n in n_estimators_parameter:
             for m in max_features_parameter:
-                models.append(RandomForestClassifier(n_estimators=n, max_features=m))
+                models.append(RandomForestClassifier(n_estimators=n, max_features=m, n_jobs=-1))
         return models
 
     if modelname == 'RFR':
@@ -690,7 +691,7 @@ def model_select(modelname):
         max_features_parameter = ['auto', 'sqrt', 'log2']
         for n in n_estimators_parameter:
             for m in max_features_parameter:
-                models.append(RandomForestRegressor(n_estimators=n, max_features=m))
+                models.append(RandomForestRegressor(n_estimators=n, max_features=m, n_jobs=-1))
         return models
 
     if modelname == 'DTC':
@@ -813,7 +814,8 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
 
     """
     metadata = None
-    for t in range(split_count):  
+    for t in range(split_count):
+        print('This is the ', t, '`th split count++++++++++')
         label_inds_t = label_inds[t]
         unlabel_inds_t = unlabel_inds[t]
         test = tests[t]
@@ -824,14 +826,14 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
             # the same type model with different parameters
             num_models = len(models)
             print('currently model is ' + modelname)
-            print('The number of this model is ',num_models)
             # record the strat time
             strat = datetime.datetime.now()
-            print(modelname + ' start the time is ',strat)
+            # print(modelname + ' start the time is ',strat)
             for k in range(num_models):
                 model = models[k]
                 # Repeated many(20) times in the same model and split
                 for _ in range(5):
+
                     # genearte five rounds before
                     l_ind = copy.deepcopy(label_inds_t)
                     u_ind = copy.deepcopy(unlabel_inds_t)
@@ -908,6 +910,6 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
                             metadata = np.vstack((metadata, j_meta_data))
 
             end = datetime.datetime.now()
-            print(modelname + ' start the time is ',end)
+            # print(modelname + ' start the time is ',end)
             print(modelname + 'this round use time is ',(end-strat).seconds)
     return metadata
