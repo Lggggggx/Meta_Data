@@ -650,15 +650,12 @@ def model_select(modelname):
     if modelname == 'KNN':
         from sklearn.neighbors import KNeighborsClassifier
         models = []
-        n_neighbors_parameter = [3, 4, 5, 6]
-        algorithm_parameter = ['auto', 'kd_tree', 'brute']
-        leaf_size_parameter = [25, 30, 35]
-        p_parameter = [1, 2]
+        n_neighbors_parameter = [3, 5]
+        algorithm_parameter = ['auto', 'kd_tree']
+        # p_parameter = [1, 2]
         for n in n_neighbors_parameter:
             for a in algorithm_parameter:
-                for l in leaf_size_parameter:
-                    for p in p_parameter:
-                        models.append(KNeighborsClassifier(n_neighbors=n, algorithm=a, leaf_size=l, p=p, n_jobs=-1))
+                models.append(KNeighborsClassifier(n_neighbors=n, algorithm=a, n_jobs=5))
         return models
 
     if modelname == 'LR':
@@ -671,34 +668,34 @@ def model_select(modelname):
         for c in C_parameter:
             for t in tol_parameter:
                 for s in solver_parameter:
-                    models.append(LogisticRegression(C=c, tol=t, solver=s, n_jobs=-1))
+                    models.append(LogisticRegression(C=c, tol=t, solver=s, n_jobs=5))
         return models
 
     if modelname == 'RFC':
         from sklearn.ensemble import RandomForestClassifier
         models = []
-        n_estimators_parameter = [10, 40, 70, 110]
-        max_features_parameter = ['auto', 'sqrt', 'log2']
+        n_estimators_parameter = [50, 110]
+        max_features_parameter = ['sqrt', 'log2']
         for n in n_estimators_parameter:
             for m in max_features_parameter:
-                models.append(RandomForestClassifier(n_estimators=n, max_features=m, n_jobs=-1))
+                models.append(RandomForestClassifier(n_estimators=n, max_features=m, n_jobs=5))
         return models
 
     if modelname == 'RFR':
         from sklearn.ensemble import RandomForestRegressor
         models = []
-        n_estimators_parameter = [10, 40, 70, 110]
-        max_features_parameter = ['auto', 'sqrt', 'log2']
+        n_estimators_parameter = [50, 110]
+        max_features_parameter = ['sqrt', 'log2']
         for n in n_estimators_parameter:
             for m in max_features_parameter:
-                models.append(RandomForestRegressor(n_estimators=n, max_features=m, n_jobs=-1))
+                models.append(RandomForestRegressor(n_estimators=n, max_features=m, n_jobs=5))
         return models
 
     if modelname == 'DTC':
         from sklearn.tree import DecisionTreeClassifier
         models = []
         splitter_parameter = ['best', 'random']
-        max_features_parameter = ['auto', 'sqrt', 'log2']
+        max_features_parameter = ['sqrt', 'log2']
         for s in splitter_parameter:
             for m in max_features_parameter:
                 models.append(DecisionTreeClassifier(splitter=s, max_features=m))
@@ -708,7 +705,7 @@ def model_select(modelname):
         from sklearn.tree import DecisionTreeRegressor
         models = []
         splitter_parameter = ['best', 'random']
-        max_features_parameter = ['auto', 'sqrt', 'log2']
+        max_features_parameter = ['sqrt', 'log2']
         for s in splitter_parameter:
             for m in max_features_parameter:
                 models.append(DecisionTreeRegressor(splitter=s, max_features=m))
@@ -735,22 +732,21 @@ def model_select(modelname):
     if modelname == 'GBC':
         from sklearn.ensemble import GradientBoostingClassifier
         models = []
-        loss_parameter = ['deviance', 'exponential']
-        learning_rate_parameter = [0.02, 0.05, 0.1]
-        n_estimators_parameter = [40, 70, 110]
-        max_features_parameter = ['auto', 'sqrt', 'log2', None]
-        for l in loss_parameter:
-            for le in learning_rate_parameter:
-                for n in n_estimators_parameter:
-                    for mf in max_features_parameter:
-                        models.append(GradientBoostingClassifier(loss=l, learning_rate=le, n_estimators=n, max_features=mf))
+        # loss_parameter = ['deviance', 'exponential']
+        learning_rate_parameter = [0.05, 0.1]
+        n_estimators_parameter = [50, 110]
+        max_features_parameter = ['sqrt', 'log2']
+        for le in learning_rate_parameter:
+            for n in n_estimators_parameter:
+                for mf in max_features_parameter:
+                    models.append(GradientBoostingClassifier(learning_rate=le, n_estimators=n, max_features=mf))
         return models
 
     if modelname == 'ABC':
         from sklearn.ensemble import AdaBoostClassifier
         models = []
-        learning_rate_parameter = [0.02, 0.05, 0.1]
-        n_estimators_parameter = [40, 70, 110]
+        learning_rate_parameter = [0.05, 0.1]
+        n_estimators_parameter = [50, 110]
         for le in learning_rate_parameter:
             for n in n_estimators_parameter:
                 models.append(AdaBoostClassifier(learning_rate=le, n_estimators=n))
@@ -759,9 +755,9 @@ def model_select(modelname):
     if modelname == 'ABR':
         from sklearn.ensemble import AdaBoostRegressor
         models = []
-        learning_rate_parameter = [0.02, 0.05, 0.1]
-        n_estimators_parameter = [40, 70, 110]
-        loss_parameter = ['linear', 'square', 'exponential']
+        learning_rate_parameter = [0.05, 0.1]
+        n_estimators_parameter = [50, 110]
+        loss_parameter = ['linear', 'square']
         for le in learning_rate_parameter:
             for n in n_estimators_parameter:
                 for l in loss_parameter:
@@ -814,10 +810,13 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
 
     """
     metadata = None
-    for t in range(split_count):
+    for t in range(3,split_count):
         print('This is the ', t, '`th split count++++++++++')
         label_inds_t = label_inds[t]
+        # print('$$$$$$$$$$label_inds_t len',len(label_inds_t))
+
         unlabel_inds_t = unlabel_inds[t]
+        # print('$$$$$$$$$$unlabel_inds_t len',len(unlabel_inds_t))
         test = tests[t]
         for modelname in modelnames:
             # choose one type models
@@ -832,11 +831,12 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
             for k in range(num_models):
                 model = models[k]
                 # Repeated many(20) times in the same model and split
-                for _ in range(5):
+                for _ in range(3):
 
                     # genearte five rounds before
                     l_ind = copy.deepcopy(label_inds_t)
                     u_ind = copy.deepcopy(unlabel_inds_t)
+                    
                     modelOutput = []
                     modelPerformance = None
                     labelindex = []
@@ -866,6 +866,7 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
                         else:
                             modelPerformance = np.vstack((modelPerformance, [i_acc, i_roc, i_mse, i_ll]))
                     
+                    # print('np.shape(modelPerformance ', np.shape(modelPerformance))
                     # calualate the meta data z(designed features) and r(performance improvement) 
                     for j in range(num_xjselect):
                         j_l_ind = copy.deepcopy(l_ind)
@@ -891,7 +892,15 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
                         # model`s prediction for label -1 or 1
                         j_prediction = np.array([1 if k>0 else -1 for k in j_output])
                         # calulate the designed mate_data Z
+                        # print('<<<<<<j_labelindex   ',len(j_labelindex))
+                        # print('<<<<<<j_unlabelindex  ',len(j_unlabelindex))
+                        # print('<<<<<<jmodelOutput   ',len(jmodelOutput))
+
+                        # print('<<<<<<j_sampelindex  ', j_sampelindex)
+                        # metastart = datetime.datetime.now()
                         j_meta_data = mate_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
+                        # metaend = datetime.datetime.now()
+                        # print('$$ mate_data use time ', (metaend - metastart))
                         # calulate the performace improvement
                         j_acc = accuracy_score(y[test], j_prediction[test])
                         j_roc = roc_auc_score(y[test], j_output[test])
@@ -911,5 +920,146 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
 
             end = datetime.datetime.now()
             # print(modelname + ' start the time is ',end)
-            print(modelname + 'this round use time is ',(end-strat).seconds)
+            print(modelname + '  this round use time is ',(end-strat).seconds)
+    return metadata
+
+
+def cal_mate_data_sequence(X, y, distacne, cluster_center_index, modelnames, test, label_ind, unlabel_ind, split_count_th, num_xjselect):
+    """calculate the designed mate data. 
+    Parameters
+    ----------
+    X: 2D array, optional (default=None) [n_samples, n_features]
+        Feature matrix of the whole dataset. It is a reference which will not use additional memory.
+
+    y: array-like, optional (default=None) [n_samples]
+        Label matrix of the whole dataset. It is a reference which will not use additional memory.
+    
+    distance_martix: 2D
+        D[i][j] reprensts the distance between X[i] and X[j].
+
+    cluster_center_index: np.ndarray
+        The cluster centers index corresponding to the samples in origin data set. 
+
+    modelname: str
+    The name of model.
+    'KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBDT', 'ABC', 'ABR'
+
+    test_idx: list
+        index of testing set, shape like [n_testing_indexes]
+
+    label_idx: list
+        index of labeling set, shape like [n_labeling_indexes]
+
+    unlabel_idx: list
+        index of unlabeling set, shape like [n_unlabeling_indexes]
+
+    split_count_th: int
+        The split_count_th split.
+    
+    num_xjselect: int 
+        The number of unlabel data to select to generate the meta data.
+
+    Returns
+    -------
+    metadata: 2D
+        The meta data about the current model and dataset.[num_xjselect, 396 + 1(features + label)]
+
+    """
+    metadata = None
+    print('This is the ', split_count_th, '`th split count++++++++++')
+    for modelname in modelnames:
+        # choose one type models
+        models = model_select(modelname)
+        
+        # the same type model with different parameters
+        num_models = len(models)
+        print('currently model is ' + modelname)
+        # record the strat time
+        strat = datetime.datetime.now()
+        # print(modelname + ' start the time is ',strat)
+        for k in range(num_models):
+            model = models[k]
+            # Repeated many(20) times in the same model and split
+            for _ in range(3):
+
+                # genearte five rounds before
+                l_ind = copy.deepcopy(label_ind)
+                u_ind = copy.deepcopy(unlabel_ind)
+                
+                modelOutput = []
+                modelPerformance = None
+                labelindex = []
+                unlabelindex = []
+                for i in range(5):
+                    i_sampelindex = np.random.choice(u_ind)
+                    u_ind = np.delete(u_ind, np.where(u_ind == i_sampelindex)[0])
+                    l_ind = np.r_[l_ind, i_sampelindex]
+                    labelindex.append(l_ind)
+                    unlabelindex.append(u_ind)
+
+                    model_i = copy.deepcopy(model)
+                    model_i.fit(X[l_ind], y[l_ind].ravel())
+                    if modelname in ['RFR', 'DTR', 'ABR']:
+                        i_output = model_i.predict(X)
+                    else:
+                        i_output = (model_i.predict_proba(X)[:, 1] - 0.5) * 2
+                    i_prediction = np.array([1 if k>0 else -1 for k in i_output])
+                    modelOutput.append(i_output)
+                    i_acc = accuracy_score(y[test], i_prediction[test])
+                    i_roc = roc_auc_score(y[test], i_output[test])
+                    i_mse = mean_squared_error(y[test], i_prediction[test])
+                    i_ll = log_loss(y[test], i_prediction[test])
+                    
+                    if modelPerformance is None:
+                        modelPerformance = np.array([i_acc, i_roc, i_mse, i_ll])
+                    else:
+                        modelPerformance = np.vstack((modelPerformance, [i_acc, i_roc, i_mse, i_ll]))
+                
+                for j in range(num_xjselect):
+                    j_l_ind = copy.deepcopy(l_ind)
+                    j_u_ind = copy.deepcopy(u_ind)
+                    j_labelindex = copy.deepcopy(labelindex)
+                    j_unlabelindex = copy.deepcopy(unlabelindex)
+                    jmodelOutput = copy.deepcopy(modelOutput)
+
+                    j_sampelindex = np.random.choice(u_ind)
+                    j_u_ind = np.delete(j_u_ind, np.where(j_u_ind == j_sampelindex)[0])
+                    j_l_ind = np.r_[j_l_ind, j_sampelindex]
+                    j_labelindex.append(j_l_ind)
+                    j_unlabelindex.append(j_u_ind)
+
+                    model_j = copy.deepcopy(model)
+                    model_j.fit(X[j_l_ind], y[j_l_ind].ravel())
+                    # model`s predicted values continuous [-1, 1]
+                    if modelname in ['RFR', 'DTR', 'ABR']:
+                        j_output = model_j.predict(X)
+                    else:
+                        j_output = (model_j.predict_proba(X)[:, 1] - 0.5) * 2
+                    jmodelOutput.append(j_output)
+                    # model`s prediction for label -1 or 1
+                    j_prediction = np.array([1 if k>0 else -1 for k in j_output])
+
+                    # calulate the designed mate_data Z
+                    j_meta_data = mate_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
+
+                    # calulate the performace improvement
+                    j_acc = accuracy_score(y[test], j_prediction[test])
+                    j_roc = roc_auc_score(y[test], j_output[test])
+                    j_mse = mean_squared_error(y[test], j_prediction[test])
+                    j_ll = log_loss(y[test], j_prediction[test])
+                    # model improvement on accuracy,auc
+                    j_perf_impr = [j_acc - modelPerformance[4][0]]
+                    j_perf_impr.append(j_roc - modelPerformance[4][1])
+                    # model ratio improvement on mean-squared-error,log-loss
+                    j_perf_impr.append((modelPerformance[4][2] - j_mse) / modelPerformance[4][2])
+                    j_perf_impr.append((modelPerformance[4][3] - j_ll) / modelPerformance[4][3])
+                    j_meta_data = np.c_[j_meta_data, np.array([j_perf_impr])]
+                    if metadata is None:
+                        metadata = j_meta_data
+                    else:
+                        metadata = np.vstack((metadata, j_meta_data))
+
+        end = datetime.datetime.now()
+        # print(modelname + ' start the time is ',end)
+        print(modelname + '  this round use time is ',(end-strat).seconds)
     return metadata
