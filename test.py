@@ -1,5 +1,6 @@
 import numpy as np
-
+import time
+import datetime
 from meta_data import DataSet, mate_data, model_select, cal_mate_data
 
 dataset_path = './newdata/'
@@ -11,7 +12,7 @@ modelnames = ['KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBC', 'ABC', 'ABR
 # in the same dataset and the same ratio of initial_label_rate,the number of split.
 split_count = 10
 # The number of unlabel data to select to generate the meta data.
-num_xjselect = 10
+num_xjselect = 2
 
 # first choose a dataset
 for datasetname in datasetnames:
