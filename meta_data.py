@@ -7,6 +7,8 @@ import copy
 import h5py
 import numpy as np 
 import scipy.io as sio
+import time
+import datetime
 
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, mean_squared_error, log_loss, hinge_loss
@@ -524,11 +526,131 @@ def model_select(modelname):
     if modelname not in ['KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBC', 'ABC', 'ABR']:
         raise ValueError("There is no " + modelname)
 
+    # if modelname == 'KNN':
+    #     from sklearn.neighbors import KNeighborsClassifier 
+    #     models = []
+    #     n_neighbors_parameter = [3, 4, 5, 6]
+    #     algorithm_parameter = ['auto', 'ball_tree', 'kd_tree', 'brute']
+    #     leaf_size_parameter = [25, 30, 35]
+    #     p_parameter = [1, 2]
+    #     for n in n_neighbors_parameter:
+    #         for a in algorithm_parameter:
+    #             for l in leaf_size_parameter:
+    #                 for p in p_parameter:
+    #                     models.append(KNeighborsClassifier(n_neighbors=n, algorithm=a, leaf_size=l, p=p))
+    #     return models 
+
+    # if modelname == 'LR':
+    #     from sklearn.linear_model import LogisticRegression
+    #     models = []
+    #     # penalty_parameter = ['l1', 'l2']
+    #     C_parameter = [1e-1, 0.5, 1]
+    #     tol_parameter = [1e-5, 1e-4, 1e-3]
+    #     solver_parameter = ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']
+    #     for c in C_parameter:
+    #         for t in tol_parameter:
+    #             for s in solver_parameter:
+    #                 models.append(LogisticRegression(C=c, tol=t, solver=s))
+    #     return models
+
+    # if modelname == 'RFC':
+    #     from sklearn.ensemble import RandomForestClassifier
+    #     models = []
+    #     n_estimators_parameter = [10, 40, 70, 110]
+    #     max_features_parameter = ['auto', 'sqrt', 'log2', None]
+    #     for n in n_estimators_parameter:
+    #         for m in max_features_parameter:
+    #             models.append(RandomForestClassifier(n_estimators=n, max_features=m))
+    #     return models
+    
+    # if modelname == 'RFR':
+    #     from sklearn.ensemble import RandomForestRegressor
+    #     models = []
+    #     n_estimators_parameter = [10, 40, 70, 110]
+    #     max_features_parameter = ['auto', 'sqrt', 'log2', None]
+    #     for n in n_estimators_parameter:
+    #         for m in max_features_parameter:
+    #             models.append(RandomForestRegressor(n_estimators=n, max_features=m))
+    #     return models
+    
+    # if modelname == 'DTC':
+    #     from sklearn.tree import DecisionTreeClassifier
+    #     models = []
+    #     splitter_parameter = ['best', 'random']
+    #     max_features_parameter = ['auto', 'sqrt', 'log2', None]
+    #     for s in splitter_parameter:
+    #         for m in max_features_parameter:
+    #             models.append(DecisionTreeClassifier(splitter=s, max_features=m))
+    #     return models
+
+    # if modelname == 'DTR':
+    #     from sklearn.tree import DecisionTreeRegressor
+    #     models = []
+    #     splitter_parameter = ['best', 'random']
+    #     max_features_parameter = ['auto', 'sqrt', 'log2', None]
+    #     for s in splitter_parameter:
+    #         for m in max_features_parameter:
+    #             models.append(DecisionTreeRegressor(splitter=s, max_features=m))
+    #     return models   
+
+    # if modelname == 'SVM':
+    #     from sklearn.svm import SVC
+    #     models = []
+    #     C_parameter = [1e-1, 0.5, 1]
+    #     kernel_parameter = ['linear', 'poly', 'sigmoid']
+    #     # Degree of the polynomial kernel function (‘poly’). Ignored by all other kernels.
+    #     degree_parameter = [2, 3, 4]
+    #     tol_parameter = [1e-5, 1e-4, 1e-3]
+    #     for c in C_parameter:
+    #         for k in kernel_parameter:
+    #             for t in tol_parameter:
+    #                 if k == 'poly':             
+    #                     for d in degree_parameter:   
+    #                         models.append(SVC(C=c ,kernel=k, degree=d, tol=t, probability=True))
+    #                 else:
+    #                     models.append(SVC(C=c ,kernel=k, tol=t, probability=True))
+    #     return models
+
+    # if modelname == 'GBC':
+    #     from sklearn.ensemble import GradientBoostingClassifier
+    #     models = []
+    #     loss_parameter = ['deviance', 'exponential']
+    #     learning_rate_parameter = [0.02, 0.05, 0.1]
+    #     n_estimators_parameter = [40, 70, 110]
+    #     max_features_parameter = ['auto', 'sqrt', 'log2', None]
+    #     for l in loss_parameter:
+    #         for le in learning_rate_parameter:
+    #             for n in n_estimators_parameter:
+    #                 for mf in max_features_parameter:
+    #                     models.append(GradientBoostingClassifier(loss=l, learning_rate=le, n_estimators=n, max_features=mf))
+    #     return models    
+
+    # if modelname == 'ABC':
+    #     from sklearn.ensemble import AdaBoostClassifier
+    #     models = []
+    #     learning_rate_parameter = [0.02, 0.05, 0.1]
+    #     n_estimators_parameter = [40, 70, 110]
+    #     for le in learning_rate_parameter:
+    #         for n in n_estimators_parameter:
+    #             models.append(AdaBoostClassifier(learning_rate=le, n_estimators=n))
+    #     return models    
+
+    # if modelname == 'ABR':
+    #     from sklearn.ensemble import AdaBoostRegressor
+    #     models = []
+    #     learning_rate_parameter = [0.02, 0.05, 0.1]
+    #     n_estimators_parameter = [40, 70, 110]
+    #     loss_parameter = ['linear', 'square', 'exponential']
+    #     for le in learning_rate_parameter:
+    #         for n in n_estimators_parameter:
+    #             for l in loss_parameter:
+    #                 models.append(AdaBoostRegressor(learning_rate=le, n_estimators=n, loss=l))
+    #     return models  
     if modelname == 'KNN':
-        from sklearn.neighbors import KNeighborsClassifier 
+        from sklearn.neighbors import KNeighborsClassifier
         models = []
         n_neighbors_parameter = [3, 4, 5, 6]
-        algorithm_parameter = ['auto', 'ball_tree', 'kd_tree', 'brute']
+        algorithm_parameter = ['auto', 'kd_tree', 'brute']
         leaf_size_parameter = [25, 30, 35]
         p_parameter = [1, 2]
         for n in n_neighbors_parameter:
@@ -536,7 +658,7 @@ def model_select(modelname):
                 for l in leaf_size_parameter:
                     for p in p_parameter:
                         models.append(KNeighborsClassifier(n_neighbors=n, algorithm=a, leaf_size=l, p=p))
-        return models 
+        return models
 
     if modelname == 'LR':
         from sklearn.linear_model import LogisticRegression
@@ -544,7 +666,7 @@ def model_select(modelname):
         # penalty_parameter = ['l1', 'l2']
         C_parameter = [1e-1, 0.5, 1]
         tol_parameter = [1e-5, 1e-4, 1e-3]
-        solver_parameter = ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']
+        solver_parameter = ['newton-cg', 'liblinear']
         for c in C_parameter:
             for t in tol_parameter:
                 for s in solver_parameter:
@@ -555,27 +677,27 @@ def model_select(modelname):
         from sklearn.ensemble import RandomForestClassifier
         models = []
         n_estimators_parameter = [10, 40, 70, 110]
-        max_features_parameter = ['auto', 'sqrt', 'log2', None]
+        max_features_parameter = ['auto', 'sqrt', 'log2']
         for n in n_estimators_parameter:
             for m in max_features_parameter:
                 models.append(RandomForestClassifier(n_estimators=n, max_features=m))
         return models
-    
+
     if modelname == 'RFR':
         from sklearn.ensemble import RandomForestRegressor
         models = []
         n_estimators_parameter = [10, 40, 70, 110]
-        max_features_parameter = ['auto', 'sqrt', 'log2', None]
+        max_features_parameter = ['auto', 'sqrt', 'log2']
         for n in n_estimators_parameter:
             for m in max_features_parameter:
                 models.append(RandomForestRegressor(n_estimators=n, max_features=m))
         return models
-    
+
     if modelname == 'DTC':
         from sklearn.tree import DecisionTreeClassifier
         models = []
         splitter_parameter = ['best', 'random']
-        max_features_parameter = ['auto', 'sqrt', 'log2', None]
+        max_features_parameter = ['auto', 'sqrt', 'log2']
         for s in splitter_parameter:
             for m in max_features_parameter:
                 models.append(DecisionTreeClassifier(splitter=s, max_features=m))
@@ -585,25 +707,25 @@ def model_select(modelname):
         from sklearn.tree import DecisionTreeRegressor
         models = []
         splitter_parameter = ['best', 'random']
-        max_features_parameter = ['auto', 'sqrt', 'log2', None]
+        max_features_parameter = ['auto', 'sqrt', 'log2']
         for s in splitter_parameter:
             for m in max_features_parameter:
                 models.append(DecisionTreeRegressor(splitter=s, max_features=m))
-        return models   
+        return models
 
     if modelname == 'SVM':
         from sklearn.svm import SVC
         models = []
-        C_parameter = [1e-1, 0.5, 1]
-        kernel_parameter = ['linear', 'poly', 'sigmoid']
+        C_parameter = [0.05, 1e-1, 0.15, 0.2]
+        kernel_parameter = ['linear']
         # Degree of the polynomial kernel function (‘poly’). Ignored by all other kernels.
         degree_parameter = [2, 3, 4]
         tol_parameter = [1e-5, 1e-4, 1e-3]
         for c in C_parameter:
             for k in kernel_parameter:
                 for t in tol_parameter:
-                    if k == 'poly':             
-                        for d in degree_parameter:   
+                    if k == 'poly':
+                        for d in degree_parameter:
                             models.append(SVC(C=c ,kernel=k, degree=d, tol=t, probability=True))
                     else:
                         models.append(SVC(C=c ,kernel=k, tol=t, probability=True))
@@ -621,7 +743,7 @@ def model_select(modelname):
                 for n in n_estimators_parameter:
                     for mf in max_features_parameter:
                         models.append(GradientBoostingClassifier(loss=l, learning_rate=le, n_estimators=n, max_features=mf))
-        return models    
+        return models
 
     if modelname == 'ABC':
         from sklearn.ensemble import AdaBoostClassifier
@@ -631,7 +753,7 @@ def model_select(modelname):
         for le in learning_rate_parameter:
             for n in n_estimators_parameter:
                 models.append(AdaBoostClassifier(learning_rate=le, n_estimators=n))
-        return models    
+        return models
 
     if modelname == 'ABR':
         from sklearn.ensemble import AdaBoostRegressor
@@ -643,7 +765,7 @@ def model_select(modelname):
             for n in n_estimators_parameter:
                 for l in loss_parameter:
                     models.append(AdaBoostRegressor(learning_rate=le, n_estimators=n, loss=l))
-        return models  
+        return models
     
 
 def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, tests, label_inds, unlabel_inds, split_count, num_xjselect):
@@ -698,13 +820,18 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
         for modelname in modelnames:
             # choose one type models
             models = model_select(modelname)
-
+            
             # the same type model with different parameters
             num_models = len(models)
+            print('currently model is ' + modelname)
+            print('The number of this model is ',num_models)
+            # record the strat time
+            strat = datetime.datetime.now()
+            print(modelname + ' start the time is ',strat)
             for k in range(num_models):
                 model = models[k]
                 # Repeated many(20) times in the same model and split
-                for _ in range(20):
+                for _ in range(5):
                     # genearte five rounds before
                     l_ind = copy.deepcopy(label_inds_t)
                     u_ind = copy.deepcopy(unlabel_inds_t)
@@ -779,5 +906,8 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
                             metadata = j_meta_data
                         else:
                             metadata = np.vstack((metadata, j_meta_data))
-                    
+
+            end = datetime.datetime.now()
+            print(modelname + ' start the time is ',end)
+            print(modelname + 'this round use time is ',(end-strat).seconds)
     return metadata
