@@ -10,7 +10,7 @@ LALmodel2
 *.pyc
 *.npy
 *.zip
-test.py
+test1.py
 testmodel.py
 data.py
 cal_mate_data.py
