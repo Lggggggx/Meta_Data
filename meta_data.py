@@ -1063,3 +1063,73 @@ def cal_mate_data_sequence(X, y, distacne, cluster_center_index, modelnames, tes
         # print(modelname + ' start the time is ',end)
         print(modelname + '  this round use time is ',(end-strat).seconds)
     return metadata
+
+
+def cal_mate_data_Z(X, y, distacne, cluster_center_index, model, label_inds, unlabel_inds, modelOutput):
+    """calculate the designed mate data. 
+    Parameters
+    ----------
+    X: 2D array, optional (default=None) [n_samples, n_features]
+        Feature matrix of the whole dataset. It is a reference which will not use additional memory.
+
+    y: array-like, optional (default=None) [n_samples]
+        Label matrix of the whole dataset. It is a reference which will not use additional memory.
+    
+    distance_martix: 2D
+        D[i][j] reprensts the distance between X[i] and X[j].
+
+    cluster_center_index: np.ndarray
+        The cluster centers index corresponding to the samples in origin data set. 
+
+    model: str
+        basemodel
+
+    label_inds: list
+        index of labeling set, shape like [5, n_labeling_indexes]
+
+    unlabel_inds: list
+        index of unlabeling set, shape like [5, n_unlabeling_indexes]
+    
+    modelOutput: list
+        each rounds model predition[5, n_samples]
+
+    Returns
+    -------
+    metadata: 2D
+        The meta data about the current model and dataset.[num_unlabel, 396(features)]
+
+    """
+    metadata = None
+
+    for j_sampelindex in range(unlabel_inds[4]):
+        j_labelindex = copy.deepcopy(label_inds)
+        j_unlabelindex = copy.deepcopy(unlabel_inds)
+        jmodelOutput = copy.deepcopy(modelOutput)
+
+        l_ind = copy.deepcopy(label_inds[4])
+        u_ind = copy.deepcopy(unlabel_inds[4])
+
+        j_u_ind = np.delete(u_ind, np.where(u_ind == j_sampelindex)[0])
+        j_l_ind = np.r_[l_ind, j_sampelindex]
+        j_labelindex.append(j_l_ind)
+        j_unlabelindex.append(j_u_ind)
+
+        model_j = copy.deepcopy(model)
+        model_j.fit(X[j_l_ind], y[j_l_ind].ravel())
+        # model`s predicted values continuous [-1, 1]
+        # if modelname in ['RFR', 'DTR', 'ABR']:
+        #     j_output = model_j.predict(X)
+        # else:
+        #     j_output = (model_j.predict_proba(X)[:, 1] - 0.5) * 2
+        j_output = model_j.predict(X)
+        jmodelOutput.append(j_output)
+
+        # calulate the designed mate_data Z
+        j_meta_data = mate_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
+
+        if metadata is None:
+            metadata = j_meta_data
+        else:
+            metadata = np.vstack((metadata, j_meta_data))
+
+    return metadata
