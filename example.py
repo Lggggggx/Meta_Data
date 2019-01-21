@@ -17,7 +17,7 @@ dataset_path = './newdata/'
 # datasetname = 'echocardiogram'
 # datasetname = 'australian'
 # datasetname = 'blood'
-datasetname = 'breast-cancer-wisc-diag'
+datasetname = 'horse-colic'
 
 
 dt = DataSet(datasetname, dataset_path)
@@ -80,6 +80,45 @@ for round in range(5):
     meta_result.append(copy.deepcopy(saver))
 
 
+random = QueryRandom(X, y)
+random_result = []
+
+for round in range(5):
+    # Get the data split of one fold experiment
+    train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
+    # Get intermediate results saver for one fold experiment
+    saver = alibox.get_stateio(round)
+    # calc the initial point
+    model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
+    pred = model.predict(X[test_idx, :])
+    accuracy = sum(pred == y[test_idx]) / len(test_idx)
+    saver.set_initial_point(accuracy)
+
+    while not stopping_criterion.is_stop():
+        # Select a subset of Uind according to the query strategy
+        # Passing model=None to use the default model for evaluating the committees' disagreement
+        select_ind = random.select(unlab_ind)
+        label_ind.update(select_ind)
+        unlab_ind.difference_update(select_ind)
+
+        # Update model and calc performance according to the model you are using
+        model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
+        pred = model.predict(X[test_idx, :])
+        accuracy = alibox.calc_performance_metric(y_true=y[test_idx],
+                                                  y_pred=pred,
+                                                  performance_metric='accuracy_score')
+
+        # Save intermediate results to file
+        st = alibox.State(select_index=select_ind, performance=accuracy)
+        saver.add_state(st)
+        saver.save()
+
+        # Passing the current progress to stopping criterion object
+        stopping_criterion.update_information(saver)
+    # Reset the progress in stopping criterion object
+    stopping_criterion.reset()
+    random_result.append(copy.deepcopy(saver))
+
 def main_loop(alibox, strategy, round):
     # Get the data split of one fold experiment
     train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
@@ -112,7 +151,7 @@ def main_loop(alibox, strategy, round):
 unc_result = []
 qbc_result = []
 eer_result = []
-random_result = []
+
 
 for round in range(5):
     train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
@@ -133,7 +172,7 @@ analyser = alibox.get_experiment_analyser(x_axis='num_of_queries')
 analyser.add_method(method_name='QBC', method_results=qbc_result)
 analyser.add_method(method_name='Unc', method_results=unc_result)
 analyser.add_method(method_name='EER', method_results=eer_result)
-# analyser.add_method(method_name='random', method_results=random_result)
+analyser.add_method(method_name='random', method_results=random_result)
 analyser.add_method(method_name='Meta', method_results=meta_result)
 
-analyser.plot_learning_curves(title='Example of alipy', std_area=False)
+analyser.plot_learning_curves(title=datasetname, std_area=False)
