@@ -121,19 +121,19 @@ for round in range(5):
     unc = QueryInstanceUncertainty(X, y)
     qbc = QueryInstanceQBC(X, y)
     eer = QureyExpectedErrorReduction(X, y)
-    random = QueryRandom(X, y)
+    # random = QueryRandom(X, y)
 
     unc_result.append(copy.deepcopy(main_loop(alibox, unc, round)))
     qbc_result.append(copy.deepcopy(main_loop(alibox, qbc, round)))
     eer_result.append(copy.deepcopy(main_loop(alibox, eer, round)))
-    random_result.append(copy.deepcopy(main_loop(alibox, random, round)))
+    # random_result.append(copy.deepcopy(main_loop(alibox, random, round)))
 
 
 analyser = alibox.get_experiment_analyser(x_axis='num_of_queries')
 analyser.add_method(method_name='QBC', method_results=qbc_result)
 analyser.add_method(method_name='Unc', method_results=unc_result)
 analyser.add_method(method_name='EER', method_results=eer_result)
-analyser.add_method(method_name='random', method_results=random_result)
+# analyser.add_method(method_name='random', method_results=random_result)
 analyser.add_method(method_name='Meta', method_results=meta_result)
 
 analyser.plot_learning_curves(title='Example of alipy', std_area=False)
