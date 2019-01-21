@@ -75,7 +75,14 @@ class QueryMetaData():
                 self.unlabel_inds_5.append(copy.deepcopy(unlabel_index))
                 model.fit(X=self.X[label_index.index, :], y=self.y[label_index.index])
                 self.modelOutput_5.append(model.predict(self.X))
-
+        elif querystategy is None:
+            for _ in range(5):
+                num_label = len(label_index.index)
+                num_unlabel = len(unlabel_index.index)
+                n_samples = np.shape(self.X)[0]
+                self.label_inds_5.append(np.zeros(num_label))
+                self.unlabel_inds_5.append(np.zeros(num_unlabel))
+                self.modelOutput_5.append(np.zeros(n_samples))          
         self.flag = True
 
     def select(self, label_index, unlabel_index, model=None):

@@ -1,88 +1,79 @@
-import numpy as np 
+import os
 import copy
+import numpy as np 
 
-from alipy import ToolBox
-from alipy.query_strategy.query_labels import QueryInstanceGraphDensity, QueryInstanceQBC, \
-    QueryInstanceQUIRE, QueryRandom, QueryInstanceUncertainty, QureyExpectedErrorReduction, QueryInstanceLAL
+from meta_data import DataSet, mate_data, model_select, cal_mate_data
 
-from meta_data import DataSet, cal_mate_data_Z
-
-
-dataset_path = './newdata/'
-datasetname = 'echocardiogram'
-dataset = DataSet(datasetname, dataset_path)
-X = dataset.X
-y = dataset.y
-distacne = dataset.get_distance()
-_, cluster_center_index = dataset.get_cluster_center()
-
-alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='.')
-
-# Split data
-alibox.split_AL(test_ratio=0.3, initial_label_rate=0.1, split_count=10)
-
-# Use the default Logistic Regression classifier
-model = alibox.get_default_model()
-
-# The cost budget is 50 times querying
-stopping_criterion = alibox.get_stopping_criterion('num_of_queries', 50)
+from sklearn.linear_model import LinearRegression, SGDRegressor
+from sklearn.svm import SVR
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.externals import joblib
 
 
-metadata = np.load('.npy')
+testdataset = 'australian_metadata.npy'
+metadata = None
+doc_root = './metadata/'
+for root, dirs, files in os.walk(doc_root):
+    for file in files:
+        if file == testdataset:
+            continue
+        print(file)
+        if metadata is None:
+            metadata = np.load(doc_root+file)
+            print(file, np.shape(metadata))
+        else:
+            metadata = np.vstack((metadata, np.load(doc_root+file)))
 
+# metadata = metadata[0:30000]
+print(np.shape(metadata))
 
+# compare the performace of different regressors
 
-def main_loop(alibox, strategy, round):
-    # Get the data split of one fold experiment
-    train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
-    # Get intermediate results saver for one fold experiment
-    saver = alibox.get_stateio(round)
-    while not stopping_criterion.is_stop():
-        # Select a subset of Uind according to the query strategy
-        # Passing model=None to use the default model for evaluating the committees' disagreement
-        select_ind = strategy.select(label_ind, unlab_ind, batch_size=1)
-        label_ind.update(select_ind)
-        unlab_ind.difference_update(select_ind)
+# LinearRegression
+lr = LinearRegression(n_jobs=5)
+lr.fit(metadata[:, 0:396], metadata[:, 396])
+lr_pred = lr.predict(metadata[:, 0:396])
+lr_mse = mean_squared_error(metadata[:, 396], lr_pred)
+print('LinearRegression mean_squared_error is : ', lr_mse)
+lr_mae = mean_absolute_error(metadata[:, 396], lr_pred)
+print('LinearRegression mean_absolute_error is : ', lr_mae)
+lr_r2 = r2_score(metadata[:, 396], lr_pred)
+print('LinearRegression r2_score is : ', lr_r2)
+joblib.dump(lr, "meta_lr.joblib")
 
-        # Update model and calc performance according to the model you are using
-        model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-        pred = model.predict(X[test_idx, :])
-        accuracy = alibox.calc_performance_metric(y_true=y[test_idx],
-                                                  y_pred=pred,
-                                                  performance_metric='accuracy_score')
+# SGDRegressor
+sgdr = SGDRegressor()
+sgdr.fit(metadata[:, 0:396], metadata[:, 396])
+sgdr_pred = sgdr.predict(metadata[:, 0:396])
+sgdr_mse = mean_squared_error(metadata[:, 396], sgdr_pred)
+print('SGDRegressor mean_squared_error is : ', sgdr_mse)
+sgdr_mae = mean_absolute_error(metadata[:, 396], sgdr_pred)
+print('SGDRegressor mean_absolute_error is : ', sgdr_mae)
+sgdr_r2 = r2_score(metadata[:, 396], sgdr_pred)
+print('SGDRegressor r2_score is : ', sgdr_r2)
+joblib.dump(sgdr, "meta_sgdr.joblib")
 
-        # Save intermediate results to file
-        st = alibox.State(select_index=select_ind, performance=accuracy)
-        saver.add_state(st)
+# SVR
+svr = SVR()
+svr.fit(metadata[:, 0:396], metadata[:, 396])
+svr_pred = svr.predict(metadata[:, 0:396])
+svr_mse = mean_squared_error(metadata[:, 396], svr_pred)
+print('SVR mean_squared_error is : ', svr_mse)
+svr_mae = mean_absolute_error(metadata[:, 396], svr_pred)
+print('SVR mean_absolute_error is : ', svr_mae)
+svr_r2 = r2_score(metadata[:, 396], svr_pred)
+print('SVR r2_score is : ', svr_r2)
+joblib.dump(svr, "meta_svr.joblib")
 
-        # Passing the current progress to stopping criterion object
-        stopping_criterion.update_information(saver)
-    # Reset the progress in stopping criterion object
-    stopping_criterion.reset()
-    return saver
-
-
-unc_result = []
-qbc_result = []
-eer_result = []
-meta = []
-
-for round in range(5):
-    train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
-
-    # Use pre-defined strategy
-    unc = QueryInstanceUncertainty(X, y)
-    qbc = QueryInstanceQBC(X, y)
-    eer = QureyExpectedErrorReduction(X, y)
-
-    unc_result.append(copy.deepcopy(main_loop(alibox, unc, round)))
-    qbc_result.append(copy.deepcopy(main_loop(alibox, qbc, round)))
-    eer_result.append(copy.deepcopy(main_loop(alibox, eer, round)))
-
-
-analyser = alibox.get_experiment_analyser(x_axis='num_of_queries')
-analyser.add_method(method_name='QBC', method_results=qbc_result)
-analyser.add_method(method_name='Unc', method_results=unc_result)
-analyser.add_method(method_name='EER', method_results=eer_result)
-
-analyser.plot_learning_curves(title='Example of alipy', std_area=False)
+# GradientBoostingRegressor
+gbr = GradientBoostingRegressor()
+gbr.fit(metadata[:, 0:396], metadata[:, 396])
+gbr_pred = gbr.predict(metadata[:, 0:396])
+gbr_mse = mean_squared_error(metadata[:, 396], gbr_pred)
+print('GradientBoostingRegressor mean_squared_error is : ', gbr_mse)
+gbr_mae = mean_absolute_error(metadata[:, 396], gbr_pred)
+print('GradientBoostingRegressor mean_absolute_error is : ', gbr_mae)
+gbr_r2 = r2_score(metadata[:, 396], gbr_pred)
+print('GradientBoostingRegressor r2_score is : ', gbr_r2)
+joblib.dump(gbr, "meta_gbr.joblib")

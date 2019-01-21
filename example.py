@@ -17,7 +17,7 @@ dataset_path = './newdata/'
 # datasetname = 'echocardiogram'
 # datasetname = 'australian'
 # datasetname = 'blood'
-datasetname = 'horse-colic'
+datasetname = 'krvskp'
 
 
 dt = DataSet(datasetname, dataset_path)
@@ -175,4 +175,4 @@ analyser.add_method(method_name='EER', method_results=eer_result)
 analyser.add_method(method_name='random', method_results=random_result)
 analyser.add_method(method_name='Meta', method_results=meta_result)
 
-analyser.plot_learning_curves(title=datasetname, std_area=False)
+analyser.plot_learning_curves(title=datasetname, std_area=False, saving_path='./experiment_result/')
