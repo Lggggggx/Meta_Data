@@ -14,14 +14,14 @@ testdatasetnames = np.load('datasetname.npy')
 # testdataset = 'australian'
 
 for testdataset in testdatasetnames:
-    print('currently testdataset is : ', testdataset)
+    print('****************currently testdataset is : ', testdataset)
     metadata = None
     doc_root = './metadata/'
     for root, dirs, files in os.walk(doc_root):
         for file in files:
             if file == testdataset + '_metadata.npy':
                 continue
-            print(file)
+            # print(file)
             if metadata is None:
                 metadata = np.load(doc_root+file)
             else:
