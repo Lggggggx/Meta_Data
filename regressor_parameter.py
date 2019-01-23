@@ -1,10 +1,9 @@
 import os
-import copy
 import numpy as np 
 import datetime
-from meta_data import DataSet, mate_data, model_select, cal_mate_data
 
-from sklearn.linear_model import LinearRegression, SGDRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model.stochastic_gradient import SGDRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.externals import joblib
@@ -28,7 +27,7 @@ testdatasetnames = np.load('datasetname.npy')
 #  'statlog-australian-credit' 'statlog-german-credit' 'statlog-heart'
 #  'texture' 'tic-tac-toe' 'titanic' 'twonorm' 'vehicle'
 #  'vertebral-column-2clases' 'wdbc']
-traindatasetnames = ['australian_metadata.npy']
+traindatasetnames = ['australian_metadata.npy', 'echocardiogram_metadata.npy', 'heart_metadata.npy']
 
 trainmetadata = None
 doc_root = './metadata/'
@@ -43,11 +42,11 @@ for root, dirs, files in os.walk(doc_root):
 start = datetime.datetime.now()
 
 # SGDRegressor
-sgdr = SGDRegressor()
+sgdr = SGDRegressor(max_iter=10)
 
-param_grid = {'learning_rate':['', '']}
+param_grid = {'learning_rate':['constant', 'optimal', 'invscaling'], 'alpha':[0.00005, 0.0001, 0.00015], 'eta0':[0.005, 0.01, 0.015]}
 
-grid = GridSearchCV(estimator = knn, param_grid = param_grid, cv=10, scoring='accuracy')
+grid = GridSearchCV(estimator = sgdr, param_grid = param_grid, cv=5, scoring='neg_mean_squared_error')
 grid.fit(trainmetadata[:, 0:396], trainmetadata[:, 396])
 
 print('grid.cv_results：',grid.cv_results_)

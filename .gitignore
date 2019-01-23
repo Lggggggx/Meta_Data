@@ -21,3 +21,4 @@ dataset_splitinfo.py
 *.png
 *.jpg
 *.joblib
+smalldataset_splitinfo
