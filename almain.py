@@ -31,10 +31,10 @@ dataset_path = './newdata/'
 #  'vertebral-column-2clases' 'wdbc']
 testdatasetnames = ['australian']
 
-lr_performance = None
+# lr_performance = None
 sgdr_performance = None
-svr_performance = None
-gbr_performance = None
+# svr_performance = None
+# gbr_performance = None
 
 for testdataset in testdatasetnames:
     print('currently testdataset is : ', testdataset)
@@ -56,21 +56,21 @@ for testdataset in testdatasetnames:
 
     # compare the performace of different regressors
 
-    # LinearRegression
-    lr = LinearRegression(n_jobs=5)
-    lr.fit(metadata[:, 0:396], metadata[:, 396])
-    lr_pred = lr.predict(testmetadata[:, 0:396])
-    lr_mse = mean_squared_error(testmetadata[:, 396], lr_pred)
-    print('In the ' + testdataset + ' LinearRegression mean_squared_error is : ', lr_mse)
-    lr_mae = mean_absolute_error(testmetadata[:, 396], lr_pred)
-    print('In the ' + testdataset + 'LinearRegression mean_absolute_error is : ', lr_mae)
-    lr_r2 = r2_score(testmetadata[:, 396], lr_pred)
-    print('In the ' + testdataset + 'LinearRegression r2_score is : ', lr_r2)
-    if lr_performance is None:
-        lr_performance = np.array([testdataset, lr_mse, lr_mae, lr_r2])
-    else:
-        lr_performance = np.vstack((lr_performance, [testdataset, lr_mse, lr_mae, lr_r2]))
-    joblib.dump(lr, testdataset + "meta_lr.joblib")
+    # # LinearRegression
+    # lr = LinearRegression(n_jobs=5)
+    # lr.fit(metadata[:, 0:396], metadata[:, 396])
+    # lr_pred = lr.predict(testmetadata[:, 0:396])
+    # lr_mse = mean_squared_error(testmetadata[:, 396], lr_pred)
+    # print('In the ' + testdataset + ' LinearRegression mean_squared_error is : ', lr_mse)
+    # lr_mae = mean_absolute_error(testmetadata[:, 396], lr_pred)
+    # print('In the ' + testdataset + 'LinearRegression mean_absolute_error is : ', lr_mae)
+    # lr_r2 = r2_score(testmetadata[:, 396], lr_pred)
+    # print('In the ' + testdataset + 'LinearRegression r2_score is : ', lr_r2)
+    # if lr_performance is None:
+    #     lr_performance = np.array([testdataset, lr_mse, lr_mae, lr_r2])
+    # else:
+    #     lr_performance = np.vstack((lr_performance, [testdataset, lr_mse, lr_mae, lr_r2]))
+    # joblib.dump(lr, testdataset + "meta_lr.joblib")
 
     # SGDRegressor
     sgdr = SGDRegressor()
@@ -88,37 +88,37 @@ for testdataset in testdatasetnames:
         sgdr_performance = np.vstack((sgdr_performance, [testdataset, sgdr_mse, sgdr_mae, sgdr_r2]))
     joblib.dump(sgdr, testdataset + "meta_sgdr.joblib")
 
-    # SVR
-    svr = SVR()
-    svr.fit(metadata[:, 0:396], metadata[:, 396])
-    svr_pred = svr.predict(testmetadata[:, 0:396])
-    svr_mse = mean_squared_error(testmetadata[:, 396], svr_pred)
-    print('In the ' + testdataset + 'SVR mean_squared_error is : ', svr_mse)
-    svr_mae = mean_absolute_error(testmetadata[:, 396], svr_pred)
-    print('In the ' + testdataset + 'SVR mean_absolute_error is : ', svr_mae)
-    svr_r2 = r2_score(testmetadata[:, 396], svr_pred)
-    print('In the ' + testdataset + 'SVR r2_score is : ', svr_r2)
-    if svr_performance is None:
-        svr_performance = np.array([testdataset, svr_mse, svr_mae, svr_r2])
-    else:
-        svr_performance = np.vstack((svr_performance, [testdataset, svr_mse, svr_mae, svr_r2]))
-    joblib.dump(svr, testdataset + "meta_svr.joblib")
+    # # SVR
+    # svr = SVR()
+    # svr.fit(metadata[:, 0:396], metadata[:, 396])
+    # svr_pred = svr.predict(testmetadata[:, 0:396])
+    # svr_mse = mean_squared_error(testmetadata[:, 396], svr_pred)
+    # print('In the ' + testdataset + 'SVR mean_squared_error is : ', svr_mse)
+    # svr_mae = mean_absolute_error(testmetadata[:, 396], svr_pred)
+    # print('In the ' + testdataset + 'SVR mean_absolute_error is : ', svr_mae)
+    # svr_r2 = r2_score(testmetadata[:, 396], svr_pred)
+    # print('In the ' + testdataset + 'SVR r2_score is : ', svr_r2)
+    # if svr_performance is None:
+    #     svr_performance = np.array([testdataset, svr_mse, svr_mae, svr_r2])
+    # else:
+    #     svr_performance = np.vstack((svr_performance, [testdataset, svr_mse, svr_mae, svr_r2]))
+    # joblib.dump(svr, testdataset + "meta_svr.joblib")
 
-    # GradientBoostingRegressor
-    gbr = GradientBoostingRegressor()
-    gbr.fit(metadata[:, 0:396], metadata[:, 396])
-    gbr_pred = gbr.predict(testmetadata[:, 0:396])
-    gbr_mse = mean_squared_error(testmetadata[:, 396], gbr_pred)
-    print('In the ' + testdataset + 'GradientBoostingRegressor mean_squared_error is : ', gbr_mse)
-    gbr_mae = mean_absolute_error(testmetadata[:, 396], gbr_pred)
-    print('In the ' + testdataset + 'GradientBoostingRegressor mean_absolute_error is : ', gbr_mae)
-    gbr_r2 = r2_score(testmetadata[:, 396], gbr_pred)
-    print('In the ' + testdataset + 'GradientBoostingRegressor r2_score is : ', gbr_r2)
-    if gbr_performance is None:
-        gbr_performance = np.array([testdataset, gbr_mse, gbr_mae, gbr_r2])
-    else:
-        gbr_performance = np.vstack((gbr_performance, [testdataset, gbr_mse, gbr_mae, gbr_r2]))
-    joblib.dump(gbr, testdataset + "meta_gbr.joblib")
+    # # GradientBoostingRegressor
+    # gbr = GradientBoostingRegressor()
+    # gbr.fit(metadata[:, 0:396], metadata[:, 396])
+    # gbr_pred = gbr.predict(testmetadata[:, 0:396])
+    # gbr_mse = mean_squared_error(testmetadata[:, 396], gbr_pred)
+    # print('In the ' + testdataset + 'GradientBoostingRegressor mean_squared_error is : ', gbr_mse)
+    # gbr_mae = mean_absolute_error(testmetadata[:, 396], gbr_pred)
+    # print('In the ' + testdataset + 'GradientBoostingRegressor mean_absolute_error is : ', gbr_mae)
+    # gbr_r2 = r2_score(testmetadata[:, 396], gbr_pred)
+    # print('In the ' + testdataset + 'GradientBoostingRegressor r2_score is : ', gbr_r2)
+    # if gbr_performance is None:
+    #     gbr_performance = np.array([testdataset, gbr_mse, gbr_mae, gbr_r2])
+    # else:
+    #     gbr_performance = np.vstack((gbr_performance, [testdataset, gbr_mse, gbr_mae, gbr_r2]))
+    # joblib.dump(gbr, testdataset + "meta_gbr.joblib")
 
     # active learning 
     dt = DataSet(testdataset, dataset_path)
@@ -138,8 +138,8 @@ for testdataset in testdatasetnames:
     stopping_criterion = alibox.get_stopping_criterion('num_of_queries', 30)
 
     # experiment
-    meta_regressor = joblib.load('meta_lr.joblib')
-    # meta_regressor = lr
+    # meta_regressor = joblib.load('meta_lr.joblib')
+    meta_regressor = sgdr
     meta_result = []
 
     for round in range(5):
