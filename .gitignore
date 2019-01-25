@@ -22,3 +22,4 @@ dataset_splitinfo.py
 *.jpg
 *.joblib
 smalldataset_splitinfo
+experiment_result

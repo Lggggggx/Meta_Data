@@ -46,7 +46,7 @@ for testdataset in testdatasetnames:
             if file == testdataset + '_metadata.npy':
                 testmetadata = np.load(doc_root + file)
                 continue
-            # print(file)
+            print(file)
             if metadata is None:
                 metadata = np.load(doc_root + file)
             else:
