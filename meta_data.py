@@ -482,11 +482,13 @@ def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs
 
         round5_ratio_unlabel_positive.append((sum(current_prediction[unlabel_ind] > 0)) / unlabel_size)
         round5_ratio_unlabel_negative.append((sum(current_prediction[unlabel_ind] < 0)) / unlabel_size)
+        
         sort_unlabel_pred = np.sort(minmax_scale(modelOutput[i][unlabel_ind]))
         i_unlabel_10_equal = [sort_unlabel_pred[int(i * unlabel_size)] for i in np.arange(0, 1, 0.1)]
         unlabel_pre_10_equal = np.r_[unlabel_pre_10_equal, i_unlabel_10_equal]
         unlabelmean.append(np.mean(i_unlabel_10_equal))
         unlabelstd.append(np.std(i_unlabel_10_equal))
+
     model_infor = np.hstack((ratio_tp, ratio_fp, ratio_tn, ratio_fn, label_pre_10_equal, labelmean, labelstd, \
          round5_ratio_unlabel_positive, round5_ratio_unlabel_negative, unlabel_pre_10_equal, unlabelmean, unlabelstd))
 

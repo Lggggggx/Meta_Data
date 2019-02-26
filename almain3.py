@@ -3,19 +3,11 @@ import copy
 import numpy as np 
 import scipy.io as sio
 
-
-import warnings
-
-from sklearn.linear_model import LinearRegression, SGDRegressor, LogisticRegression
-from sklearn.svm import SVR, SVC
+from sklearn.linear_model import LinearRegression, SGDRegressor
+from sklearn.svm import SVR
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.externals import joblib
-
-
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
-
 
 from alipy import ToolBox
 from alipy.query_strategy.query_labels import QueryInstanceGraphDensity, QueryInstanceQBC, \
@@ -38,12 +30,9 @@ dataset_path = './newdata/'
 #  'texture' 'tic-tac-toe' 'titanic' 'twonorm' 'vehicle'
 #  'vertebral-column-2clases' 'wdbc']
 # testdatasetnames = ['pima', 'heart', 'echocardiogram', 'vertebral-column-2clases', 'spect', 'australian', 'oocytes_merluccius_nucleus_4d', 'titanic', 'german', 'chess-krvkp', 'mammographic’,‘ringnorm', 'tic-tac-toe', 'twonorm', 'blood', 'statlog-australian-credit', 'diabetes', 'ionosphere', 'heart-statlog', 'oocytes_trisopterus_nucleus_2f', 'wdbc', 'cylinder-bands’, ‘breast-cancer-wisc-diag', 'clean1', 'isolet', 'credit-approval', 'optdigits', 'mushroom', 'statlog-heart', 'heart-hungarian', 'spambase', 'ethn', 'monks-1’,‘sat', 'monks-3', 'vehicle', 'texture', 'monks-2', 'liverDisorders', 'statlog-german-credit', 'congressional-voting', 'ilpd-indian-liver', 'breast-cancer-wisc', 'spectf', 'krvskp']
-# testdatasetnames = ['heart', 'house', 'australian', 'heart-statlog']
-# testdatasetnames = ['breast-cancer-wisc-diag']
-testdatasetnames=['blood', 'breast-cancer-wisc-diag', 'breast-cancer-wisc',
-    'chess-krvkp', 'clean1', 'congressional-voting', 'credit-approval']
+testdatasetnames = ['heart', 'house', 'australian', 'heart-statlog']
 # lr_performance = None
-# sgdr_performance = None
+sgdr_performance = None
 # svr_performance = None
 # gbr_performance = Non
 
@@ -65,22 +54,11 @@ for testdataset in testdatasetnames:
     # metadata = metadata[0:30000]
     # print('The shape of metadata is ', np.shape(metadata))
 
-
-
-    metadata = np.load('./metadata/australian_metadata.npy')
-
     # compare the performace of different regressors
 
     # # LinearRegression
-    print('train lr')
-    lr = LinearRegression()
-    lr.fit(metadata[:, 0:396], metadata[:, 396])
-    print('done')
-    # with warnings.catch_warnings():
-    #     warnings.simplefilter('ignore')
-    
-    #     lr.fit(metadata[:, 0:396], metadata[:, 396])
-
+    # lr = LinearRegression(n_jobs=5)
+    # lr.fit(metadata[:, 0:396], metadata[:, 396])
     # lr_pred = lr.predict(testmetadata[:, 0:396])
     # lr_mse = mean_squared_error(testmetadata[:, 396], lr_pred)
     # print('In the ' + testdataset + ' LinearRegression mean_squared_error is : ', lr_mse)
@@ -126,9 +104,9 @@ for testdataset in testdatasetnames:
     #     svr_performance = np.vstack((svr_performance, [testdataset, svr_mse, svr_mae, svr_r2]))
     # joblib.dump(svr, testdataset + "meta_svr.joblib")
 
-    # GradientBoostingRegressor
-    gbr = GradientBoostingRegressor()
-    gbr.fit(metadata[:, 0:396], metadata[:, 396])
+    # # GradientBoostingRegressor
+    # gbr = GradientBoostingRegressor()
+    # gbr.fit(metadata[:, 0:396], metadata[:, 396])
     # gbr_pred = gbr.predict(testmetadata[:, 0:396])
     # gbr_mse = mean_squared_error(testmetadata[:, 396], gbr_pred)
     # print('In the ' + testdataset + 'GradientBoostingRegressor mean_squared_error is : ', gbr_mse)
@@ -142,25 +120,19 @@ for testdataset in testdatasetnames:
     #     gbr_performance = np.vstack((gbr_performance, [testdataset, gbr_mse, gbr_mae, gbr_r2]))
     # joblib.dump(gbr, testdataset + "meta_gbr.joblib")
 
-    # GaussianProcessRegressor
-    # kernel = DotProduct() + WhiteKernel() 
-    # gpr = GaussianProcessRegressor(kernel=kernel, random_state=0)
-    # gpr.fit(metadata[:, 0:396], metadata[:, 396])
-
     # active learning 
     dt = DataSet(testdataset, dataset_path)
     X = dt.X
     y = dt.y.ravel()
     y = np.asarray(y, dtype=int)
 
-    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./newexperiment_result/'+ testdataset +'/')
+    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./experiment_result/'+testdataset+'/')
 
     # Split data
-    alibox.split_AL(test_ratio=0.3, initial_label_rate=0.02, split_count=5)
+    alibox.split_AL(test_ratio=0.3, initial_label_rate=0.05, split_count=5)
 
     # Use the default Logistic Regression classifier
-    model = LogisticRegression(solver='lbfgs')
-    # model = SVC(gamma='auto')
+    model = alibox.get_default_model()
 
     # The cost budget is 50 times querying
     stopping_criterion = alibox.get_stopping_criterion('num_of_queries', 30)
@@ -170,49 +142,9 @@ for testdataset in testdatasetnames:
     # meta_regressor = sgdr
     # meta_result = []
 
-    lr_result = []
-    for round in range(5):
-
-        meta_query = QueryMetaData(X, y, lr)
-        # Get the data split of one fold experiment
-        train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
-        # Get intermediate results saver for one fold experiment
-        saver = alibox.get_stateio(round)
-        # calc the initial point
-        model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-        pred = model.predict(X[test_idx, :])
-        accuracy = sum(pred == y[test_idx]) / len(test_idx)
-        saver.set_initial_point(accuracy)
-
-        while not stopping_criterion.is_stop():
-            # Select a subset of Uind according to the query strategy
-            # Passing model=None to use the default model for evaluating the committees' disagreement
-            select_ind = meta_query.select(label_ind, unlab_ind, model=model)
-            label_ind.update(select_ind)
-            unlab_ind.difference_update(select_ind)
-
-            # Update model and calc performance according to the model you are using
-            model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-            pred = model.predict(X[test_idx, :])
-            accuracy = alibox.calc_performance_metric(y_true=y[test_idx],
-                                                    y_pred=pred,
-                                                    performance_metric='accuracy_score')
-
-            # Save intermediate results to file
-            st = alibox.State(select_index=select_ind, performance=accuracy)
-            saver.add_state(st)
-            saver.save()
-
-            # Passing the current progress to stopping criterion object
-            stopping_criterion.update_information(saver)
-        # Reset the progress in stopping criterion object
-        stopping_criterion.reset()
-        lr_result.append(copy.deepcopy(saver))
-
-    # svr_result = []
     # for round in range(5):
 
-    #     meta_query = QueryMetaData(X, y, svr)
+    #     meta_query = QueryMetaData(X, y, meta_regressor)
     #     # Get the data split of one fold experiment
     #     train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
     #     # Get intermediate results saver for one fold experiment
@@ -246,86 +178,7 @@ for testdataset in testdatasetnames:
     #         stopping_criterion.update_information(saver)
     #     # Reset the progress in stopping criterion object
     #     stopping_criterion.reset()
-    #     svr_result.append(copy.deepcopy(saver))
-
-    gbr_result = []
-    for round in range(5):
-
-        meta_query = QueryMetaData(X, y, gbr)
-        # Get the data split of one fold experiment
-        train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
-        # Get intermediate results saver for one fold experiment
-        saver = alibox.get_stateio(round)
-        # calc the initial point
-        model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-        pred = model.predict(X[test_idx, :])
-        accuracy = sum(pred == y[test_idx]) / len(test_idx)
-        saver.set_initial_point(accuracy)
-
-        while not stopping_criterion.is_stop():
-            # Select a subset of Uind according to the query strategy
-            # Passing model=None to use the default model for evaluating the committees' disagreement
-            select_ind = meta_query.select(label_ind, unlab_ind, model=model)
-            label_ind.update(select_ind)
-            unlab_ind.difference_update(select_ind)
-
-            # Update model and calc performance according to the model you are using
-            model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-            pred = model.predict(X[test_idx, :])
-            accuracy = alibox.calc_performance_metric(y_true=y[test_idx],
-                                                    y_pred=pred,
-                                                    performance_metric='accuracy_score')
-
-            # Save intermediate results to file
-            st = alibox.State(select_index=select_ind, performance=accuracy)
-            saver.add_state(st)
-            saver.save()
-
-            # Passing the current progress to stopping criterion object
-            stopping_criterion.update_information(saver)
-        # Reset the progress in stopping criterion object
-        stopping_criterion.reset()
-        gbr_result.append(copy.deepcopy(saver))    
-
-    # gpr_result = []
-    # for round in range(5):
-
-    #     meta_query = QueryMetaData(X, y, gpr)
-    #     # Get the data split of one fold experiment
-    #     train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
-    #     # Get intermediate results saver for one fold experiment
-    #     saver = alibox.get_stateio(round)
-    #     # calc the initial point
-    #     model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-    #     pred = model.predict(X[test_idx, :])
-    #     accuracy = sum(pred == y[test_idx]) / len(test_idx)
-    #     saver.set_initial_point(accuracy)
-
-    #     while not stopping_criterion.is_stop():
-    #         # Select a subset of Uind according to the query strategy
-    #         # Passing model=None to use the default model for evaluating the committees' disagreement
-    #         select_ind = meta_query.select(label_ind, unlab_ind, model=None)
-    #         label_ind.update(select_ind)
-    #         unlab_ind.difference_update(select_ind)
-
-    #         # Update model and calc performance according to the model you are using
-    #         model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-    #         pred = model.predict(X[test_idx, :])
-    #         accuracy = alibox.calc_performance_metric(y_true=y[test_idx],
-    #                                                 y_pred=pred,
-    #                                                 performance_metric='accuracy_score')
-
-    #         # Save intermediate results to file
-    #         st = alibox.State(select_index=select_ind, performance=accuracy)
-    #         saver.add_state(st)
-    #         saver.save()
-
-    #         # Passing the current progress to stopping criterion object
-    #         stopping_criterion.update_information(saver)
-    #     # Reset the progress in stopping criterion object
-    #     stopping_criterion.reset()
-    #     gpr_result.append(copy.deepcopy(saver))
-
+    #     meta_result.append(copy.deepcopy(saver))
 
 
     random = QueryRandom(X, y)
@@ -375,7 +228,7 @@ for testdataset in testdatasetnames:
         while not stopping_criterion.is_stop():
             # Select a subset of Uind according to the query strategy
             # Passing model=None to use the default model for evaluating the committees' disagreement
-            select_ind = strategy.select(label_ind, unlab_ind, model=model, batch_size=1)
+            select_ind = strategy.select(label_ind, unlab_ind, batch_size=1)
             label_ind.update(select_ind)
             unlab_ind.difference_update(select_ind)
 
@@ -421,11 +274,5 @@ for testdataset in testdatasetnames:
     # analyser.add_method(method_name='EER', method_results=eer_result)
     analyser.add_method(method_name='random', method_results=random_result)
     # analyser.add_method(method_name='Meta', method_results=meta_result)
-    analyser.add_method(method_name='lr', method_results=lr_result)
 
-    # analyser.add_method(method_name='svr', method_results=svr_result)
-    # analyser.add_method(method_name='gpr', method_results=gpr_result)
-    analyser.add_method(method_name='gbr', method_results=gbr_result)
-
-
-    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./newexperiment_result/'+ testdataset +'/')
+    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./experiment_result/'+testdataset+'/')
