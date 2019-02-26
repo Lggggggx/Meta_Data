@@ -7,7 +7,7 @@ import scipy.io as sio
 import warnings
 
 from sklearn.linear_model import LinearRegression, SGDRegressor, LogisticRegression
-from sklearn.svm import SVR
+from sklearn.svm import SVR, SVC
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.externals import joblib
 
@@ -69,10 +69,11 @@ for testdataset in testdatasetnames:
 
     # compare the performace of different regressors
 
-    # LinearRegression
+    # # LinearRegression
+    print('train lr')
     lr = LinearRegression()
     lr.fit(metadata[:, 0:396], metadata[:, 396])
-
+    print('done')
     # with warnings.catch_warnings():
     #     warnings.simplefilter('ignore')
     
@@ -124,8 +125,8 @@ for testdataset in testdatasetnames:
     # joblib.dump(svr, testdataset + "meta_svr.joblib")
 
     # GradientBoostingRegressor
-    gbr = GradientBoostingRegressor()
-    gbr.fit(metadata[:, 0:396], metadata[:, 396])
+    # gbr = GradientBoostingRegressor()
+    # gbr.fit(metadata[:, 0:396], metadata[:, 396])
     # gbr_pred = gbr.predict(testmetadata[:, 0:396])
     # gbr_mse = mean_squared_error(testmetadata[:, 396], gbr_pred)
     # print('In the ' + testdataset + 'GradientBoostingRegressor mean_squared_error is : ', gbr_mse)
@@ -157,6 +158,7 @@ for testdataset in testdatasetnames:
 
     # Use the default Logistic Regression classifier
     model = LogisticRegression(solver='lbfgs')
+    # model = SVC(gamma='auto')
 
     # The cost budget is 50 times querying
     stopping_criterion = alibox.get_stopping_criterion('num_of_queries', 30)
@@ -166,44 +168,44 @@ for testdataset in testdatasetnames:
     # meta_regressor = sgdr
     # meta_result = []
 
-    # lr_result = []
-    # for round in range(5):
+    lr_result = []
+    for round in range(5):
 
-    #     meta_query = QueryMetaData(X, y, lr)
-    #     # Get the data split of one fold experiment
-    #     train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
-    #     # Get intermediate results saver for one fold experiment
-    #     saver = alibox.get_stateio(round)
-    #     # calc the initial point
-    #     model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-    #     pred = model.predict(X[test_idx, :])
-    #     accuracy = sum(pred == y[test_idx]) / len(test_idx)
-    #     saver.set_initial_point(accuracy)
+        meta_query = QueryMetaData(X, y, lr)
+        # Get the data split of one fold experiment
+        train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
+        # Get intermediate results saver for one fold experiment
+        saver = alibox.get_stateio(round)
+        # calc the initial point
+        model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
+        pred = model.predict(X[test_idx, :])
+        accuracy = sum(pred == y[test_idx]) / len(test_idx)
+        saver.set_initial_point(accuracy)
 
-    #     while not stopping_criterion.is_stop():
-    #         # Select a subset of Uind according to the query strategy
-    #         # Passing model=None to use the default model for evaluating the committees' disagreement
-    #         select_ind = meta_query.select(label_ind, unlab_ind, model=model)
-    #         label_ind.update(select_ind)
-    #         unlab_ind.difference_update(select_ind)
+        while not stopping_criterion.is_stop():
+            # Select a subset of Uind according to the query strategy
+            # Passing model=None to use the default model for evaluating the committees' disagreement
+            select_ind = meta_query.select(label_ind, unlab_ind, model=model)
+            label_ind.update(select_ind)
+            unlab_ind.difference_update(select_ind)
 
-    #         # Update model and calc performance according to the model you are using
-    #         model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-    #         pred = model.predict(X[test_idx, :])
-    #         accuracy = alibox.calc_performance_metric(y_true=y[test_idx],
-    #                                                 y_pred=pred,
-    #                                                 performance_metric='accuracy_score')
+            # Update model and calc performance according to the model you are using
+            model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
+            pred = model.predict(X[test_idx, :])
+            accuracy = alibox.calc_performance_metric(y_true=y[test_idx],
+                                                    y_pred=pred,
+                                                    performance_metric='accuracy_score')
 
-    #         # Save intermediate results to file
-    #         st = alibox.State(select_index=select_ind, performance=accuracy)
-    #         saver.add_state(st)
-    #         saver.save()
+            # Save intermediate results to file
+            st = alibox.State(select_index=select_ind, performance=accuracy)
+            saver.add_state(st)
+            saver.save()
 
-    #         # Passing the current progress to stopping criterion object
-    #         stopping_criterion.update_information(saver)
-    #     # Reset the progress in stopping criterion object
-    #     stopping_criterion.reset()
-    #     lr_result.append(copy.deepcopy(saver))
+            # Passing the current progress to stopping criterion object
+            stopping_criterion.update_information(saver)
+        # Reset the progress in stopping criterion object
+        stopping_criterion.reset()
+        lr_result.append(copy.deepcopy(saver))
 
     # svr_result = []
     # for round in range(5):
@@ -244,44 +246,44 @@ for testdataset in testdatasetnames:
     #     stopping_criterion.reset()
     #     svr_result.append(copy.deepcopy(saver))
 
-    gbr_result = []
-    for round in range(5):
+    # gbr_result = []
+    # for round in range(5):
 
-        meta_query = QueryMetaData(X, y, gbr)
-        # Get the data split of one fold experiment
-        train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
-        # Get intermediate results saver for one fold experiment
-        saver = alibox.get_stateio(round)
-        # calc the initial point
-        model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-        pred = model.predict(X[test_idx, :])
-        accuracy = sum(pred == y[test_idx]) / len(test_idx)
-        saver.set_initial_point(accuracy)
+    #     meta_query = QueryMetaData(X, y, gbr)
+    #     # Get the data split of one fold experiment
+    #     train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
+    #     # Get intermediate results saver for one fold experiment
+    #     saver = alibox.get_stateio(round)
+    #     # calc the initial point
+    #     model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
+    #     pred = model.predict(X[test_idx, :])
+    #     accuracy = sum(pred == y[test_idx]) / len(test_idx)
+    #     saver.set_initial_point(accuracy)
 
-        while not stopping_criterion.is_stop():
-            # Select a subset of Uind according to the query strategy
-            # Passing model=None to use the default model for evaluating the committees' disagreement
-            select_ind = meta_query.select(label_ind, unlab_ind, model=model)
-            label_ind.update(select_ind)
-            unlab_ind.difference_update(select_ind)
+    #     while not stopping_criterion.is_stop():
+    #         # Select a subset of Uind according to the query strategy
+    #         # Passing model=None to use the default model for evaluating the committees' disagreement
+    #         select_ind = meta_query.select(label_ind, unlab_ind, model=model)
+    #         label_ind.update(select_ind)
+    #         unlab_ind.difference_update(select_ind)
 
-            # Update model and calc performance according to the model you are using
-            model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-            pred = model.predict(X[test_idx, :])
-            accuracy = alibox.calc_performance_metric(y_true=y[test_idx],
-                                                    y_pred=pred,
-                                                    performance_metric='accuracy_score')
+    #         # Update model and calc performance according to the model you are using
+    #         model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
+    #         pred = model.predict(X[test_idx, :])
+    #         accuracy = alibox.calc_performance_metric(y_true=y[test_idx],
+    #                                                 y_pred=pred,
+    #                                                 performance_metric='accuracy_score')
 
-            # Save intermediate results to file
-            st = alibox.State(select_index=select_ind, performance=accuracy)
-            saver.add_state(st)
-            saver.save()
+    #         # Save intermediate results to file
+    #         st = alibox.State(select_index=select_ind, performance=accuracy)
+    #         saver.add_state(st)
+    #         saver.save()
 
-            # Passing the current progress to stopping criterion object
-            stopping_criterion.update_information(saver)
-        # Reset the progress in stopping criterion object
-        stopping_criterion.reset()
-        gbr_result.append(copy.deepcopy(saver))    
+    #         # Passing the current progress to stopping criterion object
+    #         stopping_criterion.update_information(saver)
+    #     # Reset the progress in stopping criterion object
+    #     stopping_criterion.reset()
+    #     gbr_result.append(copy.deepcopy(saver))    
 
     # gpr_result = []
     # for round in range(5):
@@ -371,7 +373,7 @@ for testdataset in testdatasetnames:
         while not stopping_criterion.is_stop():
             # Select a subset of Uind according to the query strategy
             # Passing model=None to use the default model for evaluating the committees' disagreement
-            select_ind = strategy.select(label_ind, unlab_ind, batch_size=1)
+            select_ind = strategy.select(label_ind, unlab_ind, model=model, batch_size=1)
             label_ind.update(select_ind)
             unlab_ind.difference_update(select_ind)
 
@@ -417,7 +419,7 @@ for testdataset in testdatasetnames:
     # analyser.add_method(method_name='EER', method_results=eer_result)
     analyser.add_method(method_name='random', method_results=random_result)
     # analyser.add_method(method_name='Meta', method_results=meta_result)
-    analyser.add_method(method_name='lr', method_results=lr_result)
+    # analyser.add_method(method_name='lr', method_results=lr_result)
 
     # analyser.add_method(method_name='svr', method_results=svr_result)
     # analyser.add_method(method_name='gpr', method_results=gpr_result)
