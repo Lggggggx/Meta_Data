@@ -414,6 +414,7 @@ def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs
     
     n_samples, n_feature = np.shape(X)
 
+    # information about samples
     current_label_size = len(label_indexs[5])
     current_label_y = y[label_indexs[5]]
     current_unlabel_size = len(unlabel_indexs[5])
@@ -448,6 +449,7 @@ def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs
     u10e = minmax_scale(u10e)
     distance_query_data = np.hstack((cc[cc_sort_index], l10e, u10e))
 
+    # information about model
     ratio_tn = []
     ratio_fp = []
     ratio_fn = []
@@ -492,6 +494,7 @@ def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs
     model_infor = np.hstack((ratio_tp, ratio_fp, ratio_tn, ratio_fn, label_pre_10_equal, labelmean, labelstd, \
          round5_ratio_unlabel_positive, round5_ratio_unlabel_negative, unlabel_pre_10_equal, unlabelmean, unlabelstd))
 
+    # information about model`s prediction on samples
     f_x_a = []
     f_x_c = []
     f_x_d = []

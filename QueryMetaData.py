@@ -329,14 +329,14 @@ class QueryMetaData_classify():
         # metareg_perdict = self.metaregressor.predict(metadata)
         metareg_predict_prob = self.metaregressor.predict_proba(metadata)[:, 2]
 
-        print('len(metareg_predict_prob) ',len(metareg_predict_prob))
+        # print('len(metareg_predict_prob) ',len(metareg_predict_prob))
 
         # print('len(metareg_perdict) ',len(metareg_perdict))
         # select = np.argmax(metareg_perdict)
         
         select = np.argmax(metareg_predict_prob)
-        print('select ',select)
-        print('len(unlabel_ind)',len(unlabel_ind))
+        # print('select ',select)
+        # print('len(unlabel_ind)',len(unlabel_ind))
         select_ind = unlabel_ind[select]
         label_ind.update(select_ind)
         unlabel_ind.difference_update(select_ind)

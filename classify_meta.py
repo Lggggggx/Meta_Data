@@ -26,21 +26,30 @@ from QueryMetaData import QueryMetaData, QueryMetaData_classify
 
 dataset_path = './newdata/'
 
-testdatasetnames=['australian', 'blood', 'breast-cancer-wisc-diag', 'breast-cancer-wisc',
-    'chess-krvkp', 'clean1', 'congressional-voting', 'credit-approval']
+# testdatasetnames=['australian', 'blood', 'breast-cancer-wisc-diag', 'breast-cancer-wisc',
+#     'chess-krvkp', 'clean1', 'congressional-voting', 'credit-approval']
 
+testdatasetnames = ['cylinder-bands', 'diabetes', 'ethn', 'german',
+ 'hill-valley', 'horse-colic',
+ 'ilpd-indian-liver', 'ionosphere', 'isolet', 'krvskp',
+ 'liverDisorders', 'mammographic', 'monks-1', 'monks-2', 'monks-3', 'mushroom',
+ 'oocytes_merluccius_nucleus_4d', 'oocytes_trisopterus_nucleus_2f',
+ 'optdigits', 'pima', 'ringnorm', 'sat', 'spambase', 'spectf',
+  'statlog-german-credit', 'statlog-heart',
+ 'texture', 'tic-tac-toe', 'titanic', 'twonorm', 'vehicle',
+  'wdbc']
 
 for testdataset in testdatasetnames:
 
-    metadata = np.load('./metadata/binary_metadata.npy')
+    # metadata = np.load('./metadata/binary_metadata.npy')
 
-    # compare the performace of different regressors
+    # # compare the performace of different regressors
 
-    # # LinearRegression
-    print('train lr')
-    lr = LogisticRegression()
-    lr.fit(metadata[:, 0:396], metadata[:, 396])
-    print('done')
+    # # # LinearRegression
+    # print('train lr')
+    # lr = LogisticRegression()
+    # lr.fit(metadata[:, 0:396], metadata[:, 396])
+    # print('done')
 
 
     # active learning 
@@ -49,10 +58,10 @@ for testdataset in testdatasetnames:
     y = dt.y.ravel()
     y = np.asarray(y, dtype=int)
 
-    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./classify_experiment_result/'+ testdataset +'/')
+    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./classify_experiment_result-0.01/'+ testdataset +'/')
 
     # Split data
-    alibox.split_AL(test_ratio=0.3, initial_label_rate=0.02, split_count=5)
+    alibox.split_AL(test_ratio=0.3, initial_label_rate=0.01, split_count=5)
 
     # Use the default Logistic Regression classifier
     model = LogisticRegression(solver='lbfgs')
@@ -65,6 +74,8 @@ for testdataset in testdatasetnames:
     # meta_regressor = joblib.load('meta_lr.joblib')
     # meta_regressor = sgdr
     # meta_result = []
+
+    lr = joblib.load('./metadata/classify_lr.joblib')
 
     lr_classify_result = []
     for round in range(5):
@@ -201,4 +212,4 @@ for testdataset in testdatasetnames:
     analyser.add_method(method_name='lr_classify', method_results=lr_classify_result)
 
 
-    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./classify_experiment_result/'+ testdataset +'/')
+    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./classify_experiment_result-0.01/'+ testdataset +'/')
