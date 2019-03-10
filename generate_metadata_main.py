@@ -16,6 +16,8 @@ if __name__ == "__main__":
     # The number of unlabel data to select to generate the meta data.
     num_xjselect = 20
 
+    n_labelleds = np.range(4, 50, 2)
+
     # first choose a dataset
     for datasetname in datasetnames:
         dataset = DataSet(datasetname, dataset_path)
@@ -51,25 +53,36 @@ if __name__ == "__main__":
                     else:
                         metadata = np.vstack((metadata, meta_data))            
         else:
-            for i_l_r in np.arange(0.03, 0.07, 0.02, dtype=float):
-                # trains, tests, label_inds, unlabel_inds = dataset.split_data_labelbalance(test_ratio=0.3, 
-                #     initial_label_rate=i_l_r, split_count=split_count, saving_path='./split')
-                trains, tests, label_inds, unlabel_inds = dataset.split_load(path='./split_info',
-                        datasetname=datasetname, initial_label_rate=i_l_r)
-                # meta_data = cal_mate_data(X, y, distacne, cluster_center_index, modelnames,  
-                #     trains, tests, label_inds, unlabel_inds, split_count, num_xjselect)
-                # if metadata is None:
-                #     metadata = meta_data
-                # else:
-                #     metadata = np.vstack((metadata, meta_data))
+            # for i_l_r in np.arange(0.03, 0.07, 0.02, dtype=float):
+            #     # trains, tests, label_inds, unlabel_inds = dataset.split_data_labelbalance(test_ratio=0.3, 
+            #     #     initial_label_rate=i_l_r, split_count=split_count, saving_path='./split')
 
+            #     trains, tests, label_inds, unlabel_inds = dataset.split_load(path='./split_info',
+            #             datasetname=datasetname, initial_label_rate=i_l_r)
+            #     # meta_data = cal_mate_data(X, y, distacne, cluster_center_index, modelnames,  
+            #     #     trains, tests, label_inds, unlabel_inds, split_count, num_xjselect)
+            #     # if metadata is None:
+            #     #     metadata = meta_data
+            #     # else:
+            #     #     metadata = np.vstack((metadata, meta_data))
+
+            #     for t in range(split_count):
+            #         meta_data = cal_mate_data_sequence(X, y, distacne, cluster_center_index, modelnames,  
+            #         tests[t], label_inds[t], unlabel_inds[t], t, num_xjselect)
+            #         if metadata is None:
+            #             metadata = meta_data
+            #         else:
+            #             metadata = np.vstack((metadata, meta_data))  
+
+            for n_labelled in n_labelleds:
+                trains, tests, label_inds, unlabel_inds = dataset.split_data_by_nlabelled(n_labelled, test_ratio=0.6, split_count=10, saving_path='./n_labelled_split_info')
                 for t in range(split_count):
                     meta_data = cal_mate_data_sequence(X, y, distacne, cluster_center_index, modelnames,  
-                    tests[t], label_inds[t], unlabel_inds[t], t, num_xjselect)
+                     tests[t], label_inds[t], unlabel_inds[t], t, num_xjselect)
                     if metadata is None:
                         metadata = meta_data
                     else:
-                        metadata = np.vstack((metadata, meta_data))   
+                        metadata = np.vstack((metadata, meta_data))                  
 
         print(datasetname + ' is complete and saved successfully.')
         np.save(datasetname + "_metadata.npy", metadata)

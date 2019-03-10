@@ -40,7 +40,7 @@ testdatasetnames = ['cylinder-bands', 'diabetes', 'ethn', 'german',
   'wdbc']
 
 for testdataset in testdatasetnames:
-
+    print('***********currently dataset is : ', testdataset)
     # metadata = np.load('./metadata/binary_metadata.npy')
 
     # # compare the performace of different regressors
@@ -58,10 +58,10 @@ for testdataset in testdatasetnames:
     y = dt.y.ravel()
     y = np.asarray(y, dtype=int)
 
-    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./classify_experiment_result-0.01/'+ testdataset +'/')
+    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./classify_experiment_result-0.03/'+ testdataset +'/')
 
     # Split data
-    alibox.split_AL(test_ratio=0.3, initial_label_rate=0.01, split_count=5)
+    alibox.split_AL(test_ratio=0.3, initial_label_rate=0.03, split_count=5)
 
     # Use the default Logistic Regression classifier
     model = LogisticRegression(solver='lbfgs')
@@ -212,4 +212,4 @@ for testdataset in testdatasetnames:
     analyser.add_method(method_name='lr_classify', method_results=lr_classify_result)
 
 
-    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./classify_experiment_result-0.01/'+ testdataset +'/')
+    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./classify_experiment_result-0.03/'+ testdataset +'/')

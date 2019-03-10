@@ -158,7 +158,8 @@ class DataSet():
     
     def split_data_labelbalance(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='.'):
         """Split given data considered the problem of label balance.
-        The train test label unlabel sets` proportion of positive and negative categories should be consistent with the original data set.
+        The train test label unlabel sets` proportion of positive and negative 
+        categories should be consistent with the original data set.
 
         Parameters
         ----------
@@ -294,6 +295,74 @@ class DataSet():
         #         unlabel_idx=unlabel_idx, initial_label_rate=initial_label_rate, path=saving_path)
         return train_idx, test_idx, label_idx, unlabel_idx
 
+    def split_data_by_nlabelled(self, n_labelled, test_ratio=0.6, split_count=10, saving_path='.'):
+        """
+        n_labelled: int 
+            The number of the inital labelled samples.
+        test_ration: float 
+            The ratio of the test dataset.
+
+        Returns
+        -------
+        train_idx: list
+            index of training set, shape like [n_split_count, n_training_indexes]
+
+        test_idx: list
+            index of testing set, shape like [n_split_count, n_testing_indexes]
+
+        label_idx: list
+            index of labeling set, shape like [n_split_count, n_labeling_indexes]
+
+        unlabel_idx: list
+            index of unlabeling set, shape like [n_split_count, n_unlabeling_indexes]        
+        """
+
+        # check parameters
+        len_of_parameters = [len(self.X) if self.X is not None else None, len(self.y) if self.y is not None else None]
+        number_of_instance = np.unique([i for i in len_of_parameters if i is not None])
+        if len(number_of_instance) > 1:
+            raise ValueError("Different length of instances and _labels found.")
+        else:
+            number_of_instance = number_of_instance[0]
+        
+        positive_ind = np.where(self.y == 1)[0]
+        negative_ind = np.where(self.y == -1)[0]
+        # split
+        train_idx = []
+        test_idx = []
+        label_idx = []
+        unlabel_idx = []
+        for i in range(split_count):
+
+            index_positive1 = np.random.permutation(positive_ind)
+            index_negative1 = np.random.permutation(negative_ind)
+
+            tp_labelled = np.r_[index_positive1[0], index_negative1[0]]
+            index_restall = np.r_[index_positive1[1:], index_negative1[1:]]
+            index_restall = np.random.permutation(index_restall)
+            cutpoint = int((1 - test_ratio) * len(index_restall))
+            if cutpoint <= 1:
+                cutpoint = 1
+            
+            tp_test = index_restall[cutpoint:]
+            tp_train = np.r_[tp_labelled, index_restall[0:cutpoint]]
+            if n_labelled > 2:
+                if (n_labelled - 3)> cutpoint: 
+                    tp_labelled = np.r_[tp_labelled, index_restall[0:cutpoint-1]]
+                    tp_unlabelled = index_restall[cutpoint-1]
+                else:
+                    tp_labelled = np.r_[tp_labelled, index_restall[0:n_labelled-2]]
+                    tp_unlabelled = index_restall[n_labelled-2:]
+
+            test_idx.append(tp_test)
+            train_idx.append(tp_train)
+            label_idx.append(tp_labelled)
+            unlabel_idx.append(tp_unlabelled)
+
+        self.split_nlabelled_save(train_idx=train_idx, test_idx=test_idx, label_idx=label_idx,
+                unlabel_idx=unlabel_idx, n_labelled=n_labelled, path=saving_path)
+        return train_idx, test_idx, label_idx, unlabel_idx
+
     def split_load(self, path, datasetname, initial_label_rate):
         """Load split from path.
 
@@ -363,6 +432,31 @@ class DataSet():
             np.save(os.path.join(saving_path, self.dataset_name + initial_label_rate.__str__() + '_test_idx.npy'), test_idx)
             np.save(os.path.join(saving_path, self.dataset_name + initial_label_rate.__str__() + '_label_idx.npy'), label_idx)
             np.save(os.path.join(saving_path, self.dataset_name + initial_label_rate.__str__() + '_unlabel_idx.npy'), unlabel_idx)
+        else:
+            raise Exception("A path to a directory is expected.")
+
+    def split_nlabelled_save(self, train_idx, test_idx, label_idx, unlabel_idx, n_labelled, path):
+        """Save the split to file for auditting or loading for other methods.
+
+        Parameters
+        ----------
+        saving_path: str
+            path to save the settings. If a dir is not provided, it will generate a folder called
+            'alipy_split' for saving.
+
+        """
+        if path is None:
+            return
+        else:
+            if not isinstance(path, str):
+                raise TypeError("A string is expected, but received: %s" % str(type(path)))
+
+        saving_path = os.path.abspath(path)
+        if os.path.isdir(saving_path):
+            np.save(os.path.join(saving_path, self.dataset_name + n_labelled.__str__() + '_train_idx.npy'), train_idx)
+            np.save(os.path.join(saving_path, self.dataset_name + n_labelled.__str__() + '_test_idx.npy'), test_idx)
+            np.save(os.path.join(saving_path, self.dataset_name + n_labelled.__str__() + '_label_idx.npy'), label_idx)
+            np.save(os.path.join(saving_path, self.dataset_name + n_labelled.__str__() + '_unlabel_idx.npy'), unlabel_idx)
         else:
             raise Exception("A path to a directory is expected.")
 
