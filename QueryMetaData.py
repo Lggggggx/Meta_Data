@@ -327,7 +327,7 @@ class QueryMetaData_classify():
         metadata = self.cal_mate_data_Z(self.label_inds_5, self.unlabel_inds_5, self.modelOutput_5, model)
 
         # metareg_perdict = self.metaregressor.predict(metadata)
-        metareg_predict_prob = self.metaregressor.predict_proba(metadata)[:, 2]
+        metareg_predict_prob = self.metaregressor.predict_proba(metadata)[:, 1]
 
         # print('len(metareg_predict_prob) ',len(metareg_predict_prob))
 

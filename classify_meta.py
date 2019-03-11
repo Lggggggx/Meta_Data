@@ -29,15 +29,18 @@ dataset_path = './newdata/'
 # testdatasetnames=['australian', 'blood', 'breast-cancer-wisc-diag', 'breast-cancer-wisc',
 #     'chess-krvkp', 'clean1', 'congressional-voting', 'credit-approval']
 
-testdatasetnames = ['cylinder-bands', 'diabetes', 'ethn', 'german',
- 'hill-valley', 'horse-colic',
- 'ilpd-indian-liver', 'ionosphere', 'isolet', 'krvskp',
- 'liverDisorders', 'mammographic', 'monks-1', 'monks-2', 'monks-3', 'mushroom',
- 'oocytes_merluccius_nucleus_4d', 'oocytes_trisopterus_nucleus_2f',
- 'optdigits', 'pima', 'ringnorm', 'sat', 'spambase', 'spectf',
-  'statlog-german-credit', 'statlog-heart',
- 'texture', 'tic-tac-toe', 'titanic', 'twonorm', 'vehicle',
-  'wdbc']
+# testdatasetnames = ['cylinder-bands', 'diabetes', 'ethn', 'german',
+#  'hill-valley', 'horse-colic',
+#  'ilpd-indian-liver', 'ionosphere', 'isolet', 'krvskp',
+#  'liverDisorders', 'mammographic', 'monks-1', 'monks-2', 'monks-3', 'mushroom',
+#  'oocytes_merluccius_nucleus_4d', 'oocytes_trisopterus_nucleus_2f',
+#  'optdigits', 'pima', 'ringnorm', 'sat', 'spambase', 'spectf',
+#   'statlog-german-credit', 'statlog-heart',
+#  'texture', 'tic-tac-toe', 'titanic', 'twonorm', 'vehicle',
+#   'wdbc']
+
+testdatasetnames = ['wdbc', 'clean1', 'ethn', 'blood', 'breast-cancer-wisc']
+# testdatasetnames = ['australian']
 
 for testdataset in testdatasetnames:
     print('***********currently dataset is : ', testdataset)
@@ -46,9 +49,9 @@ for testdataset in testdatasetnames:
     # # compare the performace of different regressors
 
     # # # LinearRegression
-    # print('train lr')
-    # lr = LogisticRegression()
-    # lr.fit(metadata[:, 0:396], metadata[:, 396])
+    # print('train rfc')
+    # rfc = LogisticRegression()
+    # rfc.fit(metadata[:, 0:396], metadata[:, 396])
     # print('done')
 
 
@@ -58,29 +61,29 @@ for testdataset in testdatasetnames:
     y = dt.y.ravel()
     y = np.asarray(y, dtype=int)
 
-    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./classify_experiment_result-0.03/'+ testdataset +'/')
+    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./n_labelleds_classify_exp/'+ testdataset +'/')
 
     # Split data
-    alibox.split_AL(test_ratio=0.3, initial_label_rate=0.03, split_count=5)
+    alibox.split_AL(test_ratio=0.3, initial_label_rate=0.005, split_count=10)
 
     # Use the default Logistic Regression classifier
     model = LogisticRegression(solver='lbfgs')
     # model = SVC(gamma='auto')
 
     # The cost budget is 50 times querying
-    stopping_criterion = alibox.get_stopping_criterion('num_of_queries', 30)
+    stopping_criterion = alibox.get_stopping_criterion('num_of_queries', 50)
 
     # experiment
     # meta_regressor = joblib.load('meta_lr.joblib')
     # meta_regressor = sgdr
     # meta_result = []
 
-    lr = joblib.load('./metadata/classify_lr.joblib')
+    rfc = joblib.load('./newmetadata/rfc_p_classify_australian.joblib')
 
-    lr_classify_result = []
-    for round in range(5):
+    rfc_classify_result = []
+    for round in range(10):
 
-        meta_query = QueryMetaData_classify(X, y, lr)
+        meta_query = QueryMetaData_classify(X, y, rfc)
         # Get the data split of one fold experiment
         train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
         # Get intermediate results saver for one fold experiment
@@ -114,13 +117,13 @@ for testdataset in testdatasetnames:
             stopping_criterion.update_information(saver)
         # Reset the progress in stopping criterion object
         stopping_criterion.reset()
-        lr_classify_result.append(copy.deepcopy(saver))
+        rfc_classify_result.append(copy.deepcopy(saver))
 
 
     random = QueryRandom(X, y)
     random_result = []
 
-    for round in range(5):
+    for round in range(10):
         # Get the data split of one fold experiment
         train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
         # Get intermediate results saver for one fold experiment
@@ -189,7 +192,7 @@ for testdataset in testdatasetnames:
     qbc_result = []
     eer_result = []
 
-    for round in range(5):
+    for round in range(10):
         train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
 
         # Use pre-defined strategy
@@ -209,7 +212,7 @@ for testdataset in testdatasetnames:
     analyser.add_method(method_name='Unc', method_results=unc_result)
     # analyser.add_method(method_name='EER', method_results=eer_result)
     analyser.add_method(method_name='random', method_results=random_result)
-    analyser.add_method(method_name='lr_classify', method_results=lr_classify_result)
+    analyser.add_method(method_name='lr_classify', method_results=rfc_classify_result)
 
 
-    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./classify_experiment_result-0.03/'+ testdataset +'/')
+    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./n_labelleds_classify_exp/'+ testdataset +'/')
