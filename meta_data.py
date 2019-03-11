@@ -346,13 +346,13 @@ class DataSet():
             
             tp_test = index_restall[cutpoint:]
             tp_train = np.r_[tp_labelled, index_restall[0:cutpoint]]
-            if n_labelled > 2:
+            if n_labelled >= 2:
                 if (n_labelled - 3)> cutpoint: 
                     tp_labelled = np.r_[tp_labelled, index_restall[0:cutpoint-1]]
                     tp_unlabelled = index_restall[cutpoint-1]
                 else:
                     tp_labelled = np.r_[tp_labelled, index_restall[0:n_labelled-2]]
-                    tp_unlabelled = index_restall[n_labelled-2:]
+                    tp_unlabelled = index_restall[n_labelled-2:cutpoint]
 
             test_idx.append(tp_test)
             train_idx.append(tp_train)
