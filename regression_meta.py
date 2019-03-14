@@ -10,7 +10,7 @@ from sklearn.svm import SVR, SVC
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.externals import joblib
 
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, RandomForestClassifier
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
 
@@ -36,8 +36,10 @@ dataset_path = './newdata/'
 #  'texture', 'tic-tac-toe', 'titanic', 'twonorm', 'vehicle',
 #   'wdbc']
 
-testdatasetnames = [ 'clean1', 'ethn', 'blood', 'breast-cancer-wisc']
+testdatasetnames = [ 'australian', 'clean1', 'ethn', 'blood', 'breast-cancer-wisc']
 # testdatasetnames = ['australian']
+
+splitcount = 5
 
 for testdataset in testdatasetnames:
     print('***********currently dataset is : ', testdataset)
@@ -57,69 +59,31 @@ for testdataset in testdatasetnames:
     y = dt.y.ravel()
     y = np.asarray(y, dtype=int)
 
-    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./n_labelleds_ethn_classify_exp/'+ testdataset +'/')
+    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./n_labelleds_wdbc_0.01regression_exp/'+ testdataset +'/')
 
     # Split data
-    alibox.split_AL(test_ratio=0.3, initial_label_rate=0.005, split_count=10)
+    alibox.split_AL(test_ratio=0.3, initial_label_rate=0.01, split_count=splitcount)
 
     # Use the default Logistic Regression classifier
-    model = LogisticRegression(solver='lbfgs')
+    # model = LogisticRegression(solver='lbfgs')
+    model = RandomForestClassifier()
     # model = SVC(gamma='auto')
 
     # The cost budget is 50 times querying
-    stopping_criterion = alibox.get_stopping_criterion('num_of_queries', 50)
+    stopping_criterion = alibox.get_stopping_criterion('num_of_queries', 100)
 
     # experiment
     # meta_regressor = joblib.load('meta_lr.joblib')
     # meta_regressor = sgdr
     # meta_result = []
 
-    rfc = joblib.load('./newmetadata/rfc_p_classify_ethn.joblib')
 
-    rfc_classify_result = []
-    for round in range(10):
-
-        meta_query = QueryMetaData_classify(X, y, rfc)
-        # Get the data split of one fold experiment
-        train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
-        # Get intermediate results saver for one fold experiment
-        saver = alibox.get_stateio(round)
-        # calc the initial point
-        model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-        pred = model.predict(X[test_idx, :])
-        accuracy = sum(pred == y[test_idx]) / len(test_idx)
-        saver.set_initial_point(accuracy)
-
-        while not stopping_criterion.is_stop():
-            # Select a subset of Uind according to the query strategy
-            # Passing model=None to use the default model for evaluating the committees' disagreement
-            select_ind = meta_query.select(label_ind, unlab_ind, model=model)
-            label_ind.update(select_ind)
-            unlab_ind.difference_update(select_ind)
-
-            # Update model and calc performance according to the model you are using
-            model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-            pred = model.predict(X[test_idx, :])
-            accuracy = alibox.calc_performance_metric(y_true=y[test_idx],
-                                                    y_pred=pred,
-                                                    performance_metric='accuracy_score')
-
-            # Save intermediate results to file
-            st = alibox.State(select_index=select_ind, performance=accuracy)
-            saver.add_state(st)
-            saver.save()
-
-            # Passing the current progress to stopping criterion object
-            stopping_criterion.update_information(saver)
-        # Reset the progress in stopping criterion object
-        stopping_criterion.reset()
-        rfc_classify_result.append(copy.deepcopy(saver))
 
 
     random = QueryRandom(X, y)
     random_result = []
 
-    for round in range(10):
+    for round in range(splitcount):
         # Get the data split of one fold experiment
         train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
         # Get intermediate results saver for one fold experiment
@@ -188,7 +152,7 @@ for testdataset in testdatasetnames:
     qbc_result = []
     eer_result = []
 
-    for round in range(10):
+    for round in range(splitcount):
         train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
 
         # Use pre-defined strategy
@@ -203,12 +167,53 @@ for testdataset in testdatasetnames:
         # random_result.append(copy.deepcopy(main_loop(alibox, random, round)))
 
 
+    rfr = joblib.load('./newmetadata/rfr_p_regression_wdbc.joblib')
+
+    rfr_regression_result = []
+    for round in range(splitcount):
+
+        meta_query = QueryMetaData(X, y, rfr)
+        # Get the data split of one fold experiment
+        train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
+        # Get intermediate results saver for one fold experiment
+        saver = alibox.get_stateio(round)
+        # calc the initial point
+        model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
+        pred = model.predict(X[test_idx, :])
+        accuracy = sum(pred == y[test_idx]) / len(test_idx)
+        saver.set_initial_point(accuracy)
+
+        while not stopping_criterion.is_stop():
+            # Select a subset of Uind according to the query strategy
+            # Passing model=None to use the default model for evaluating the committees' disagreement
+            select_ind = meta_query.select(label_ind, unlab_ind, model=model)
+            label_ind.update(select_ind)
+            unlab_ind.difference_update(select_ind)
+
+            # Update model and calc performance according to the model you are using
+            model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
+            pred = model.predict(X[test_idx, :])
+            accuracy = alibox.calc_performance_metric(y_true=y[test_idx],
+                                                    y_pred=pred,
+                                                    performance_metric='accuracy_score')
+
+            # Save intermediate results to file
+            st = alibox.State(select_index=select_ind, performance=accuracy)
+            saver.add_state(st)
+            saver.save()
+
+            # Passing the current progress to stopping criterion object
+            stopping_criterion.update_information(saver)
+        # Reset the progress in stopping criterion object
+        stopping_criterion.reset()
+        rfr_regression_result.append(copy.deepcopy(saver))
+
     analyser = alibox.get_experiment_analyser(x_axis='num_of_queries')
     analyser.add_method(method_name='QBC', method_results=qbc_result)
     analyser.add_method(method_name='Unc', method_results=unc_result)
     # analyser.add_method(method_name='EER', method_results=eer_result)
     analyser.add_method(method_name='random', method_results=random_result)
-    analyser.add_method(method_name='rfc_classify', method_results=rfc_classify_result)
+    analyser.add_method(method_name='rfr_regression', method_results=rfr_regression_result)
 
 
-    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./n_labelleds_ethn_classify_exp/'+ testdataset +'/')
+    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./n_labelleds_wdbc_0.01regression_exp/'+ testdataset +'/')

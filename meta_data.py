@@ -565,6 +565,7 @@ def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs
         unlabel_ind = unlabel_indexs[i]
 
         tn, fp, fn, tp = confusion_matrix(y[label_ind], cur_prediction[label_ind], labels=[-1, 1]).ravel()
+
         ratio_tn.append(tn / label_size)
         ratio_fp.append(fp / label_size)
         ratio_fn.append(fn / label_size)
