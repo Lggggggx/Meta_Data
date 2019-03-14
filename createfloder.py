@@ -4,9 +4,9 @@ def mkdir(path):
 	if not folder:                  
 		os.makedirs(path)            
         
-# testdatasetnames = ['australian', 'blood', 'breast-cancer-wisc-diag', 'breast-cancer-wisc',
-#     'chess-krvkp', 'clean1', 'congressional-voting', 'credit-approval']
-testdatasetnames = ['cylinder-bands', 'diabetes', 'echocardiogram', 'ethn', 'german',
+testdatasetnames = ['australian', 'blood', 'breast-cancer-wisc-diag', 'breast-cancer-wisc',
+    'chess-krvkp', 'clean1', 'congressional-voting', 'credit-approval','cylinder-bands', 
+	'diabetes', 'echocardiogram', 'ethn', 'german',
  'heart-hungarian', 'heart-statlog', 'heart', 'hill-valley', 'horse-colic',
  'house-votes', 'house', 'ilpd-indian-liver', 'ionosphere', 'isolet', 'krvskp',
  'liverDisorders', 'mammographic', 'monks-1', 'monks-2', 'monks-3', 'mushroom',
@@ -17,4 +17,4 @@ testdatasetnames = ['cylinder-bands', 'diabetes', 'echocardiogram', 'ethn', 'ger
  'vertebral-column-2clases', 'wdbc']
 
 for name in testdatasetnames:
-    mkdir('./classify_experiment_result-0.04/'+name+'/')
+    mkdir('./preprocessing_classify_experiment_result-0.03/'+name+'/')
