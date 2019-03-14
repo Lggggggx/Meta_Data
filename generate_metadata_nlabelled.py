@@ -1,22 +1,27 @@
 import numpy as np
 
+import warnings
+warnings.filterwarnings("ignore")
+
 from meta_data import DataSet, mate_data, model_select, cal_mate_data, cal_mate_data_sequence
 
 if __name__ == "__main__":
     
     dataset_path = './newdata/'
     # datasetnames = np.load('datasetname.npy')
-    datasetnames = ['echocardiogram', 'heart', 'heart-hungarian', 'heart-statlog', 'house',
-                        'house-votes', 'spect', 'statlog-heart', 'vertebral-column-2clases']
+    # datasetnames = ['echocardiogram', 'heart', 'heart-hungarian', 'heart-statlog', 'house',
+    #                     'house-votes', 'spect', 'statlog-heart', 'vertebral-column-2clases']
+    datasetnames = ['wdbc', 'clean1', 'ethn', 'australian', 'blood', 'breast-cancer-wisc']
     # Different types of models, each type has many models with different parameters
-    modelnames = ['KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBC', 'ABC', 'ABR']
+    # modelnames = ['KNN', 'LR', 'RFC', 'RFR', 'DTC', 'DTR', 'SVM', 'GBC', 'ABC', 'ABR']
+    modelnames = ['LR']
 
     # in the same dataset and the same ratio of initial_label_rate,the number of split.
-    split_count = 10
+    split_count = 20
     # The number of unlabel data to select to generate the meta data.
-    num_xjselect = 20
+    num_xjselect = 10
 
-    n_labelleds = np.range(4, 50, 2)
+    n_labelleds = np.arange(2, 50, 2)
 
     # first choose a dataset
     for datasetname in datasetnames:
@@ -75,7 +80,7 @@ if __name__ == "__main__":
             #             metadata = np.vstack((metadata, meta_data))  
 
             for n_labelled in n_labelleds:
-                trains, tests, label_inds, unlabel_inds = dataset.split_data_by_nlabelled(n_labelled, test_ratio=0.6, split_count=10, saving_path='./n_labelled_split_info')
+                trains, tests, label_inds, unlabel_inds = dataset.split_data_by_nlabelled(n_labelled, test_ratio=0.6, split_count=split_count, saving_path='./n_labelled_split_info')
                 for t in range(split_count):
                     meta_data = cal_mate_data_sequence(X, y, distacne, cluster_center_index, modelnames,  
                      tests[t], label_inds[t], unlabel_inds[t], t, num_xjselect)

@@ -327,11 +327,15 @@ class QueryMetaData_classify():
         metadata = self.cal_mate_data_Z(self.label_inds_5, self.unlabel_inds_5, self.modelOutput_5, model)
 
         # metareg_perdict = self.metaregressor.predict(metadata)
+<<<<<<< HEAD
         # metareg_predict_prob = self.metaregressor.predict_proba(metadata)[:, 2]
 
         # metadata only has two classes: postive+1 and negative-1
         metareg_predict_prob = self.metaregressor.predict_proba(metadata)[:, 1]
 
+=======
+        metareg_predict_prob = self.metaregressor.predict_proba(metadata)[:, 1]
+>>>>>>> df23abca5976e040cd8e125673b41208006c148f
 
         # print('len(metareg_predict_prob) ',len(metareg_predict_prob))
 
