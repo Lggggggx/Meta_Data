@@ -57,6 +57,8 @@ for testdataset in testdatasetnames:
     y = dt.y.ravel()
     y = np.asarray(y, dtype=int)
 
+    
+
     alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./n_labelleds_ethn_classify_exp/'+ testdataset +'/')
 
     # Split data
