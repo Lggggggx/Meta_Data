@@ -79,11 +79,16 @@ for testdataset in testdatasetnames:
     y = np.asarray(y, dtype=int)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./preprocessing_classify_experiment_result-0.03/'+ testdataset +'/')
 
     # Split data
     alibox.split_AL(test_ratio=0.3, initial_label_rate=0.03, split_count=5)
 =======
+=======
+    
+
+>>>>>>> c98c1150ebf8ae2e076dd6d435408eaf239d6abe
     alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./n_labelleds_ethn_classify_exp/'+ testdataset +'/')
 
     # Split data

@@ -82,6 +82,7 @@ class DataSet():
             raise ValueError("Please input dataset_path or X, y")
         self.n_samples, self.n_features = np.shape(self.X)
         self.distance = None
+        self.distance_flag = False  
     
     def get_dataset(self, dataset_path):
         """
@@ -148,14 +149,70 @@ class DataSet():
             raise ValueError("There is only one sample.")
         
         distance = np.zeros((self.n_samples, self.n_samples))
-        for i in range(1, self.n_samples):
+        for i in range(self.n_samples):
             for j in range(i+1, self.n_samples):
                 if method == 'Euclidean':
                     distance[i][j] = np.linalg.norm(self.X[i] - self.X[j])
         
         self.distance = distance + distance.T
+        self.distance_flag = True
         return self.distance
     
+    def get_node_potential(self):
+        """
+        Node potential (Nod) finds dense regions based on a
+        Gaussian weighting function.
+
+        ra = 0.4 and rb = 1.25ra
+        """
+        if self.distance_flag is False:
+            self.get_distance(method='Euclidean')
+
+        node = np.zeros(self.n_samples)
+        for i in range(self.n_samples):
+            for j in range(self.n_samples):
+                if i != j:
+                    node[i] += np.exp(-(25*self.distance[i][j]))
+        self.node_potential = node
+        return self.node_potential
+    
+    def get_graph_density(self, k=10):
+        """
+        We build a k-nearest neighbor graph with Pˆij = 1 if d(xi, xj) is one of the k 
+        smallest distances of xi with Manhattan distance d and k = 10 for the number of
+        nearest neighbors.This graph is symmetric, i.e., Pij =max(Pˆij, Pˆji), 
+        and weighted with a Gaussian kernel
+        """
+        if self.distance_flag is False:
+            self.get_distance(method='Euclidean')
+
+        # search the k-nearest neighbor of xi
+        pt_matrix = np.zeros((self.n_samples, self.n_samples), dtype=int)
+        for i in range(self.n_samples):
+            xi_knn_sortindex = np.argsort(self.distance[i], kind='mergesort')
+            pt_matrix[i][xi_knn_sortindex[1:k+1]] = 1
+        p_matrix = np.zeros((self.n_samples, self.n_samples), dtype=int)
+        for i in range(self.n_samples):
+            for j in range(i+1, self.n_samples):
+                if (pt_matrix[i][j] + pt_matrix[j][i]) > 0 :
+                    p_matrix[i][j] = 1
+        p_matrix = p_matrix + p_matrix.T
+        self.p_matrix = p_matrix
+
+        w_matrix = np.zeros((self.n_samples, self.n_samples))
+        for i in range(self.n_samples):
+            for j in range(self.n_samples):
+                if p_matrix[i][j] == 1:
+                    w_matrix[i][j] = np.exp(-(self.distance[i][j] / 2))
+        self.w_matrix = w_matrix
+
+        gra_matrix = np.zeros(self.n_samples)
+        for i in range(self.n_samples):
+            gra_matrix[i] = np.sum(w_matrix[i]) / np.sum(p_matrix[i])
+
+        self.gra_matrix = gra_matrix
+        return gra_matrix
+
     def split_data_labelbalance(self, test_ratio=0.3, initial_label_rate=0.05, split_count=10, saving_path='.'):
         """Split given data considered the problem of label balance.
         The train test label unlabel sets` proportion of positive and negative 
@@ -461,7 +518,7 @@ class DataSet():
             raise Exception("A path to a directory is expected.")
 
 
-def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs, modelOutput, query_index):
+def mate_data(X, y, distance, cluster_center_index, node_potential, graph_density, label_indexs, unlabel_indexs, modelOutput, query_index):
     """Calculate the meta data according to the current model,dataset and five rounds before information.
 
 
@@ -507,7 +564,9 @@ def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs
             unlabel_indexs[i] = np.array(unlabel_indexs[i])
     
     n_samples, n_feature = np.shape(X)
-
+    assert(n_samples == np.shape(node_potential)[0])
+    assert(n_samples == np.shape(graph_density)[0])
+    
     # information about samples
     current_label_size = len(label_indexs[5])
     current_label_y = y[label_indexs[5]]
@@ -605,6 +664,16 @@ def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs
 
     metadata = np.hstack((n_feature, ratio_label_positive, ratio_label_negative, \
          ratio_unlabel_positive, ratio_unlabel_negative, distance_query_data, model_infor, fdata))
+
+
+    # RALF: sample criteria
+    # node potential
+    
+
+    # kernel_farthest_first
+
+    # graph density
+
     metadata = np.array([metadata])
     return metadata
 

@@ -59,7 +59,7 @@ for testdataset in testdatasetnames:
     y = dt.y.ravel()
     y = np.asarray(y, dtype=int)
 
-    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./n_labelleds_wdbc_0.01regression_exp/'+ testdataset +'/')
+    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./n_labelleds_wdbc_0.03regression_exp/'+ testdataset +'/')
 
     # Split data
     alibox.split_AL(test_ratio=0.3, initial_label_rate=0.01, split_count=splitcount)
@@ -216,4 +216,4 @@ for testdataset in testdatasetnames:
     analyser.add_method(method_name='rfr_regression', method_results=rfr_regression_result)
 
 
-    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./n_labelleds_wdbc_0.01regression_exp/'+ testdataset +'/')
+    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./n_labelleds_wdbc_0.03regression_exp/'+ testdataset +'/')
