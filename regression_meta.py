@@ -36,10 +36,26 @@ dataset_path = './newdata/'
 #  'texture', 'tic-tac-toe', 'titanic', 'twonorm', 'vehicle',
 #   'wdbc']
 
-testdatasetnames = [ 'australian', 'clean1', 'ethn', 'blood', 'breast-cancer-wisc']
-# testdatasetnames = ['australian']
+testdatasetnames = [ 'australian', 'clean1', 'ethn', 'blood', 'breast-cancer-wisc', 'wdbc']
 
+# testdatasetnames = ['wdbc']
+ 
 splitcount = 5
+
+query_num = 50
+
+test_ratio = 0.3
+
+initial_label_ratio = 0.005
+
+savefloder_path = './n_labelleds_new_australian_regression_exp-0.005/'
+# metadata regressior
+rfr = joblib.load('./newmetadata/rfr_p_regression_australian.joblib')
+
+# Use the default Logistic Regression classifier
+model = LogisticRegression(solver='lbfgs')
+# model = RandomForestClassifier()
+# model = SVC(gamma='auto')
 
 for testdataset in testdatasetnames:
     print('***********currently dataset is : ', testdataset)
@@ -59,26 +75,20 @@ for testdataset in testdatasetnames:
     y = dt.y.ravel()
     y = np.asarray(y, dtype=int)
 
-    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path='./n_labelleds_wdbc_0.03regression_exp/'+ testdataset +'/')
+    alibox = ToolBox(X=X, y=y, query_type='AllLabels', saving_path=savefloder_path + testdataset +'/')
 
     # Split data
-    alibox.split_AL(test_ratio=0.3, initial_label_rate=0.01, split_count=splitcount)
+    alibox.split_AL(test_ratio=test_ratio, initial_label_rate=initial_label_ratio, split_count=splitcount)
 
-    # Use the default Logistic Regression classifier
-    # model = LogisticRegression(solver='lbfgs')
-    model = RandomForestClassifier()
-    # model = SVC(gamma='auto')
+
 
     # The cost budget is 50 times querying
-    stopping_criterion = alibox.get_stopping_criterion('num_of_queries', 100)
+    stopping_criterion = alibox.get_stopping_criterion('num_of_queries', query_num)
 
     # experiment
     # meta_regressor = joblib.load('meta_lr.joblib')
     # meta_regressor = sgdr
     # meta_result = []
-
-
-
 
     random = QueryRandom(X, y)
     random_result = []
@@ -167,8 +177,6 @@ for testdataset in testdatasetnames:
         # random_result.append(copy.deepcopy(main_loop(alibox, random, round)))
 
 
-    rfr = joblib.load('./newmetadata/rfr_p_regression_wdbc.joblib')
-
     rfr_regression_result = []
     for round in range(splitcount):
 
@@ -216,4 +224,4 @@ for testdataset in testdatasetnames:
     analyser.add_method(method_name='rfr_regression', method_results=rfr_regression_result)
 
 
-    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path='./n_labelleds_wdbc_0.03regression_exp/'+ testdataset +'/')
+    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path=savefloder_path + testdataset +'/')

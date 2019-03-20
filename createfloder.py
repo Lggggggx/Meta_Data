@@ -36,8 +36,12 @@ testdatasetnames = ['wdbc', 'clean1', 'ethn', 'australian', 'blood', 'breast-can
 
 for name in testdatasetnames:
 <<<<<<< HEAD
+<<<<<<< HEAD
     mkdir('./n_labelleds_wdbc_0.01regression_exp/'+name+'/')
 >>>>>>> df23abca5976e040cd8e125673b41208006c148f
 =======
     mkdir('./n_labelleds_wdbc_0.03regression_exp/'+name+'/')
 >>>>>>> c98c1150ebf8ae2e076dd6d435408eaf239d6abe
+=======
+    mkdir('./experiment_result/n_labelleds_new_australian_regression_exp/'+name+'/')
+>>>>>>> ab5a597ddd5786456cd06f9b5901a3ddfa2613b9

@@ -8,7 +8,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
 from sklearn.externals import joblib
 
-metadata = np.load('./newmetadata/process_wdbc_rforest_metadata.npy')
+metadata = np.load('./newmetadata/process_australian_lr_metadata.npy')
 print(np.shape(metadata))
 
 np.random.shuffle(metadata)
@@ -20,9 +20,9 @@ y = metadata[:, 396]
 # rfc.fit(X, y)
 # joblib.dump(rfc, './newmetadata/rfc_p_classify_ethn.joblib')
 
-# rfr = RandomForestRegressor()
-# rfr.fit(X, y)
-# joblib.dump(rfr, './newmetadata/rfr_p_regression_wdbc.joblib')
+rfr = RandomForestRegressor()
+rfr.fit(X, y)
+joblib.dump(rfr, './newmetadata/rfr_p_regression_australian.joblib')
 
 
 # print(y[0:10])
