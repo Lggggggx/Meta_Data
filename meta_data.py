@@ -518,7 +518,7 @@ class DataSet():
             raise Exception("A path to a directory is expected.")
 
 
-def mate_data(X, y, distance, cluster_center_index, node_potential, graph_density, label_indexs, unlabel_indexs, modelOutput, query_index):
+def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs, modelOutput, query_index):
     """Calculate the meta data according to the current model,dataset and five rounds before information.
 
 
@@ -564,8 +564,8 @@ def mate_data(X, y, distance, cluster_center_index, node_potential, graph_densit
             unlabel_indexs[i] = np.array(unlabel_indexs[i])
     
     n_samples, n_feature = np.shape(X)
-    assert(n_samples == np.shape(node_potential)[0])
-    assert(n_samples == np.shape(graph_density)[0])
+    # assert(n_samples == np.shape(node_potential)[0])
+    # assert(n_samples == np.shape(graph_density)[0])
     
     # information about samples
     current_label_size = len(label_indexs[5])
@@ -668,7 +668,7 @@ def mate_data(X, y, distance, cluster_center_index, node_potential, graph_densit
 
     # RALF: sample criteria
     # node potential
-    
+
 
     # kernel_farthest_first
 
