@@ -18,10 +18,12 @@ y = metadata[:, 396]
 
 # rfc = RandomForestClassifier()
 # rfc.fit(X, y)
+# print('the oob_score_ of randomforestclassifier is : ', rfc.oob_score_)
 # joblib.dump(rfc, './newmetadata/rfc_p_classify_ethn.joblib')
 
 rfr = RandomForestRegressor()
 rfr.fit(X, y)
+print('the oob_score_ of randomforestregressor is : ', rfr.oob_score_)
 joblib.dump(rfr, './newmetadata/rfr_p_regression_australian.joblib')
 
 
