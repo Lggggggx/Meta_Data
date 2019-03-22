@@ -19,4 +19,4 @@ def mkdir(path):
 testdatasetnames = ['wdbc', 'clean1', 'ethn', 'australian', 'blood', 'breast-cancer-wisc']
 
 for name in testdatasetnames:
-    mkdir('./experiment_result/combination_classify/australian_lrmetadata_0.005'+name+'/')
+    mkdir('./experiment_result/combination_classify/australian_lrmetadata_0.01/'+name+'/')
