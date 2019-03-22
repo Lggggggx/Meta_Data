@@ -547,8 +547,13 @@ class QueryMetaData_combination():
         unlabel_ind = copy.deepcopy(self.unlabel_inds_5[4])
 
         # select x^ by unncertainty for combining the [x*, x^] c_data
+        # using uncertainty to select x^
         un = QueryInstanceUncertainty(self.X, self.y)
         un_selectedind = un.select(label_ind, unlabel_ind, model)
+
+        # using random to select x^
+        rand = QueryRandom(self.X, self.y)
+        rand_selectedind = rand.select(unlabel_ind)
         
         # cd_second = meta_data(self.X, self.y, self.distacne, self.cluster_center_index, self.label_inds_5, self.unlabel_inds_5, self.modelOutput_5, un_selectedind)
         metadata = self.cal_mate_data_Z(self.label_inds_5, self.unlabel_inds_5, self.modelOutput_5, model)

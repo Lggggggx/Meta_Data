@@ -31,9 +31,9 @@ query_num = 50
 
 test_ratio = 0.3
 
-initial_label_ratio = 0.005
+initial_label_ratio = 0.01
 
-savefloder_path = './experiment_result/combination_classify/australian_lrmetadata_0.005'
+savefloder_path = './experiment_result/combination_classify/australian_lrmetadata_0.01'
 # metadata regressior
 cd_lr = joblib.load('./processing_metadata_fitting/lr_cdata.joblib')
 
