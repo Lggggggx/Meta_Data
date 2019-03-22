@@ -45,30 +45,58 @@ num_negative = len(negative_600index)
 # generate the designed classification data : [x+, x-] is +1, else is -1 [x+, x+], [x-, x+], [x-, x-] are negative
 positive_data = None
 negative_data = None
-for i in range(num_positive):
-    
-    for j in range(num_negative):
-        new_1positive_data = np.concatenate((X[positive_1440index[i], 0:369], X[negative_600index[j], 0:396], [+1]))
+
+for i in np.random.randint(0, 1400, 100):
+    for j in np.random.randint(0, 600, 100):
+        new_1positive_data = np.concatenate((X[positive_1440index[i], 0:396], X[negative_600index[j], 0:396], [+1]))
         if positive_data is None:
             positive_data = new_1positive_data
         else:
-            positive_data = np.r_[positive_data, new_1positive_data]
+            positive_data = np.vstack((positive_data, new_1positive_data))
         
-        new_3negative_data = np.concatenate((X[negative_600index[j], 0:369], X[positive_1440index[i], 0:369], [-1]))
+        new_3negative_data = np.concatenate((X[negative_600index[j], 0:396], X[positive_1440index[i], 0:396], [-1]))
         if negative_data is None:
             negative_data = new_3negative_data
         else:
-            negative_data = np.r_[negative_data, new_3negative_data]
-    
-    for j in range(num_positive):
-        new_2negative_data = np.concatenate((X[positive_1440index[i], 0:369], X[positive_1440index[j], 0:369], [-1]))
-        negative_data = np.r_[negative_data, new_2negative_data]
+            negative_data = np.vstack((negative_data, new_3negative_data))
 
-for i in range(num_negative):
-    for j in range(num_negative):
-        new_4negative_data = np.concatenate((X[negative_600index[i], 0:369], X[negative_600index[j], 0:369], [-1]))
-        negative_data = np.r_[negative_data, new_4negative_data]
+    for j in np.random.randint(0, 1400, 50):
+        new_2negative_data = np.concatenate((X[positive_1440index[i], 0:396], X[positive_1440index[j], 0:396], [-1]))
+        negative_data = np.vstack((negative_data, new_2negative_data))
+
+for i in np.random.randint(0, 600, 50):    
+    for j in np.random.randint(0, 600, 50):
+        new_4negative_data = np.concatenate((X[negative_600index[i], 0:396], X[negative_600index[j], 0:396], [-1]))
+        negative_data = np.vstack((negative_data, new_4negative_data))
+
+
+# for i in range(num_positive):
+    
+#     for j in range(num_negative):
+#         new_1positive_data = np.concatenate((X[positive_1440index[i], 0:396], X[negative_600index[j], 0:396], [+1]))
+#         if positive_data is None:
+#             positive_data = new_1positive_data
+#         else:
+#             positive_data = np.r_[positive_data, new_1positive_data]
+        
+#         new_3negative_data = np.concatenate((X[negative_600index[j], 0:396], X[positive_1440index[i], 0:396], [-1]))
+#         if negative_data is None:
+#             negative_data = new_3negative_data
+#         else:
+#             negative_data = np.r_[negative_data, new_3negative_data]
+    
+#     for j in range(num_positive):
+#         new_2negative_data = np.concatenate((X[positive_1440index[i], 0:396], X[positive_1440index[j], 0:396], [-1]))
+#         negative_data = np.r_[negative_data, new_2negative_data]
+
+# for i in range(num_negative):
+#     for j in range(num_negative):
+#         new_4negative_data = np.concatenate((X[negative_600index[i], 0:396], X[negative_600index[j], 0:396], [-1]))
+#         negative_data = np.r_[negative_data, new_4negative_data]
 
 
 print(np.shape(positive_data))
 print(np.shape(negative_data))
+
+np.save('./processing_metadata_fitting/combination_postive_data.npy', positive_data)
+np.save('./processing_metadata_fitting/combination_negative_data.npy', negative_data)

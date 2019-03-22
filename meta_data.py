@@ -518,7 +518,7 @@ class DataSet():
             raise Exception("A path to a directory is expected.")
 
 
-def mate_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs, modelOutput, query_index):
+def meta_data(X, y, distance, cluster_center_index, label_indexs, unlabel_indexs, modelOutput, query_index):
     """Calculate the meta data according to the current model,dataset and five rounds before information.
 
 
@@ -934,7 +934,7 @@ def model_select(modelname):
         return models
     
 
-def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, tests, label_inds, unlabel_inds, split_count, num_xjselect):
+def cal_meta_data(X, y, distacne, cluster_center_index, modelnames, trains, tests, label_inds, unlabel_inds, split_count, num_xjselect):
     """calculate the designed mate data. 
     Parameters
     ----------
@@ -1060,16 +1060,16 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
                         jmodelOutput.append(j_output)
                         # model`s prediction for label -1 or 1
                         j_prediction = np.array([1 if k>0 else -1 for k in j_output])
-                        # calulate the designed mate_data Z
+                        # calulate the designed meta_data Z
                         # print('<<<<<<j_labelindex   ',len(j_labelindex))
                         # print('<<<<<<j_unlabelindex  ',len(j_unlabelindex))
                         # print('<<<<<<jmodelOutput   ',len(jmodelOutput))
 
                         # print('<<<<<<j_sampelindex  ', j_sampelindex)
                         # metastart = datetime.datetime.now()
-                        j_meta_data = mate_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
+                        j_meta_data = meta_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
                         # metaend = datetime.datetime.now()
-                        # print('$$ mate_data use time ', (metaend - metastart))
+                        # print('$$ meta_data use time ', (metaend - metastart))
                         # calulate the performace improvement
                         j_acc = accuracy_score(y[test], j_prediction[test])
                         j_roc = roc_auc_score(y[test], j_output[test])
@@ -1093,7 +1093,7 @@ def cal_mate_data(X, y, distacne, cluster_center_index, modelnames, trains, test
     return metadata
 
 
-def cal_mate_data_sequence(X, y, distacne, cluster_center_index, modelnames, test, label_ind, unlabel_ind, split_count_th, num_xjselect):
+def cal_meta_data_sequence(X, y, distacne, cluster_center_index, modelnames, test, label_ind, unlabel_ind, split_count_th, num_xjselect):
     """calculate the designed mate data. 
     Parameters
     ----------
@@ -1208,8 +1208,8 @@ def cal_mate_data_sequence(X, y, distacne, cluster_center_index, modelnames, tes
                     # model`s prediction for label -1 or 1
                     j_prediction = np.array([1 if k>0 else -1 for k in j_output])
 
-                    # calulate the designed mate_data Z
-                    j_meta_data = mate_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
+                    # calulate the designed meta_data Z
+                    j_meta_data = meta_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
 
                     # calulate the performace improvement
                     j_acc = accuracy_score(y[test], j_prediction[test])
@@ -1234,7 +1234,7 @@ def cal_mate_data_sequence(X, y, distacne, cluster_center_index, modelnames, tes
     return metadata
 
 
-def cal_mate_data_Z(X, y, distacne, cluster_center_index, model, label_inds, unlabel_inds, modelOutput):
+def cal_meta_data_Z(X, y, distacne, cluster_center_index, model, label_inds, unlabel_inds, modelOutput):
     """calculate the designed mate data. 
     Parameters
     ----------
@@ -1293,8 +1293,8 @@ def cal_mate_data_Z(X, y, distacne, cluster_center_index, model, label_inds, unl
         j_output = model_j.predict(X)
         jmodelOutput.append(j_output)
 
-        # calulate the designed mate_data Z
-        j_meta_data = mate_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
+        # calulate the designed meta_data Z
+        j_meta_data = meta_data(X, y, distacne, cluster_center_index, j_labelindex, j_unlabelindex, jmodelOutput, j_sampelindex)
 
         if metadata is None:
             metadata = j_meta_data
