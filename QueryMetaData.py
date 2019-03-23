@@ -68,7 +68,7 @@ class QueryMetaData():
         elif querystategy =='random':
             random = QueryRandom(self.X, self.y)        
             for _ in range(5):
-                select_ind = random.select(unlabel_index)
+                select_ind = random.select(label_index, unlabel_index)
                 label_index.update(select_ind)
                 unlabel_index.difference_update(select_ind)
                 self.label_inds_5.append(copy.deepcopy(label_index))
@@ -144,7 +144,7 @@ class QueryMetaData():
             output = model.predict(self.X)
         self.modelOutput_5.append(output)
 
-        return select_ind
+        return select_ind, copy.deepcopy(self.label_inds_5[4]), copy.deepcopy(self.unlabel_inds_5[4])
 
     def cal_mate_data_Z(self, label_inds, unlabel_inds, modelOutput, model):
         """calculate the designed mate data. 
@@ -273,7 +273,7 @@ class QueryMetaData_classify():
         elif querystategy =='random':
             random = QueryRandom(self.X, self.y)        
             for _ in range(5):
-                select_ind = random.select(unlabel_index)
+                select_ind = random.select(label_index, unlabel_index)
                 label_index.update(select_ind)
                 unlabel_index.difference_update(select_ind)
                 self.label_inds_5.append(copy.deepcopy(label_index))
@@ -356,7 +356,7 @@ class QueryMetaData_classify():
             output = model.predict(self.X)
         self.modelOutput_5.append(output)
 
-        return select_ind
+        return select_ind, copy.deepcopy(self.label_inds_5[4]), copy.deepcopy(self.unlabel_inds_5[4])
 
     def cal_mate_data_Z(self, label_inds, unlabel_inds, modelOutput, model):
         """calculate the designed mate data. 
@@ -485,7 +485,7 @@ class QueryMetaData_combination():
         elif querystategy =='random':
             random = QueryRandom(self.X, self.y)        
             for _ in range(5):
-                select_ind = random.select(unlabel_index)
+                select_ind = random.select(label_index, unlabel_index)
                 label_index.update(select_ind)
                 unlabel_index.difference_update(select_ind)
                 self.label_inds_5.append(copy.deepcopy(label_index))
@@ -544,8 +544,8 @@ class QueryMetaData_combination():
         un_selectedind = un.select(label_ind, unlabel_ind, model)
 
         # using random to select x^
-        rand = QueryRandom(self.X, self.y)
-        rand_selectedind = rand.select(unlabel_ind)
+        # rand = QueryRandom(self.X, self.y)
+        # rand_selectedind = rand.select(label_ind, unlabel_ind)
         
         # cd_second = meta_data(self.X, self.y, self.distacne, self.cluster_center_index, self.label_inds_5, self.unlabel_inds_5, self.modelOutput_5, un_selectedind)
         metadata = self.cal_mate_data_Z(self.label_inds_5, self.unlabel_inds_5, self.modelOutput_5, model)
@@ -590,7 +590,7 @@ class QueryMetaData_combination():
             output = model.predict(self.X)
         self.modelOutput_5.append(output)
 
-        return select_ind
+        return select_ind, copy.deepcopy(self.label_inds_5[4]), copy.deepcopy(self.unlabel_inds_5[4])
 
     def cal_mate_data_Z(self, label_inds, unlabel_inds, modelOutput, model):
         """calculate the designed mate data. 
