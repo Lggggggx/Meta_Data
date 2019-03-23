@@ -8,7 +8,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
 from sklearn.externals import joblib
 
-metadata = np.load('./newmetadata/process_australian_lr_metadata.npy')
+metadata = np.load('./newmetadata/process_classify_australian_lr_metadata.npy')
 print(np.shape(metadata))
 
 np.random.shuffle(metadata)
@@ -18,13 +18,18 @@ y = metadata[:, 396]
 
 # rfc = RandomForestClassifier()
 # rfc.fit(X, y)
-# print('the oob_score_ of randomforestclassifier is : ', rfc.oob_score_)
-# joblib.dump(rfc, './newmetadata/rfc_p_classify_ethn.joblib')
+# # print('the oob_score_ of randomforestclassifier is : ', rfc.oob_score_)
+# joblib.dump(rfc, './newmetadata/rfc_p_classify_australian.joblib')
 
-rfr = RandomForestRegressor()
-rfr.fit(X, y)
-print('the oob_score_ of randomforestregressor is : ', rfr.oob_score_)
-joblib.dump(rfr, './newmetadata/rfr_p_regression_australian.joblib')
+# rfr = RandomForestRegressor()
+# rfr.fit(X, y)
+# print('the oob_score_ of randomforestregressor is : ', rfr.oob_score_)
+# joblib.dump(rfr, './newmetadata/rfr_p_regression_australian.joblib')
+
+lr = LogisticRegression()
+lr.fit(X, y)
+print(lr.score(X, y))
+joblib.dump(lr, './newmetadata/lr_p_classify_australian.joblib')
 
 
 # print(y[0:10])
