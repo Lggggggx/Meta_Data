@@ -1,6 +1,6 @@
 import numpy as np 
 
-ethn_metadata = np.load('./newmetadata/australian_metadata.npy')
+ethn_metadata = np.load('./orgin_metadata/australian_rfc_metadata.npy')
 print(np.shape(ethn_metadata))
 
 X = ethn_metadata[:, 0:396]
@@ -31,10 +31,10 @@ print(process_ethn_metadata[0:10, 396])
 # new_metadata = np.hstack((X, new))
 # print(np.shape(new_metadata))
 # print(new_metadata[0:20, 396])           
-np.save('./newmetadata/process_australian_metadata.npy', process_ethn_metadata)     
+np.save('./preprocessing_metadata/process_australian_metadata.npy', process_ethn_metadata)     
 
 process_ethn_metadata[0:len(np.where(y>=0.01)[0]), 396] = 1
 process_ethn_metadata[len(np.where(y>=0.01)[0]):, 396] = -1
 print(np.unique(process_ethn_metadata[:, 396]))
 
-np.save('./newmetadata/process_classify_australian_metadata.npy', process_ethn_metadata)
+np.save('./preprocessing_metadata/process_classify_australian_metadata.npy', process_ethn_metadata)

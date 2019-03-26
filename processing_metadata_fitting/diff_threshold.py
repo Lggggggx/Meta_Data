@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings("ignore")
 warnings.simplefilter("ignore")
 
-metadata = np.load('./origin_metadata/australian_lr_metadata.npy')
+metadata = np.load('./origin_metadata/australian_rfc_metadata.npy')
 print(np.shape(metadata))
 
 X = metadata[:, 0:396]
@@ -106,5 +106,5 @@ for t in threshold:
 regressor_scorelist = np.vstack((threshold, lr_score, sgdr_score, rfr_score))
 classifier_scorelist = np.vstack((threshold, lor_score, rfc_score))
 
-np.savetxt('./processing_metadata_fitting/regressor_scorelist_mae', regressor_scorelist, delimiter='    ')
-np.savetxt('./processing_metadata_fitting/classifier_scorelist_precision', classifier_scorelist, delimiter='    ')
+np.savetxt('./processing_metadata_fitting/australian_rfc_regressor_scorelist_mae', regressor_scorelist, delimiter='    ')
+np.savetxt('./processing_metadata_fitting/australian_rfc_classifier_scorelist_precision', classifier_scorelist, delimiter='    ')

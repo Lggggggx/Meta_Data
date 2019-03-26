@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings("ignore")
 warnings.simplefilter("ignore")
 
-metadata = np.load('./origin_metadata/australian_lr_metadata.npy')
+metadata = np.load('./origin_metadata/australian_rfc_metadata.npy')
 print(np.shape(metadata))
 
 X = metadata[:, 0:396]
@@ -34,8 +34,12 @@ y_sort_index = np.argsort(y)
 # print("positive ", y[percent10_positive_index])
 # print("negative ", y[percent10_negative_index])
 
-positive_1440index = y_sort_index[-1440:-1]
-negative_600index = y_sort_index[0:600]
+# all big than 100
+num_p = 353
+num_n = 108
+
+positive_1440index = y_sort_index[-num_p:-1]
+negative_600index = y_sort_index[0:num_n]
 
 num_positive = len(positive_1440index)
 num_negative = len(negative_600index)
@@ -46,8 +50,8 @@ num_negative = len(negative_600index)
 positive_data = None
 negative_data = None
 
-for i in np.random.randint(0, 1400, 100):
-    for j in np.random.randint(0, 600, 100):
+for i in np.random.randint(0, num_p-1, 100):
+    for j in np.random.randint(0, num_n-1, 100):
         new_1positive_data = np.concatenate((X[positive_1440index[i], 0:396], X[negative_600index[j], 0:396], [+1]))
         if positive_data is None:
             positive_data = new_1positive_data
@@ -60,12 +64,12 @@ for i in np.random.randint(0, 1400, 100):
         else:
             negative_data = np.vstack((negative_data, new_3negative_data))
 
-    for j in np.random.randint(0, 1400, 50):
+    for j in np.random.randint(0, num_p-1, 50):
         new_2negative_data = np.concatenate((X[positive_1440index[i], 0:396], X[positive_1440index[j], 0:396], [-1]))
         negative_data = np.vstack((negative_data, new_2negative_data))
 
-for i in np.random.randint(0, 600, 50):    
-    for j in np.random.randint(0, 600, 50):
+for i in np.random.randint(0, num_n-1, 50):    
+    for j in np.random.randint(0, num_n-1, 50):
         new_4negative_data = np.concatenate((X[negative_600index[i], 0:396], X[negative_600index[j], 0:396], [-1]))
         negative_data = np.vstack((negative_data, new_4negative_data))
 
@@ -98,5 +102,5 @@ for i in np.random.randint(0, 600, 50):
 print(np.shape(positive_data))
 print(np.shape(negative_data))
 
-np.save('./processing_metadata_fitting/combination_postive_data.npy', positive_data)
-np.save('./processing_metadata_fitting/combination_negative_data.npy', negative_data)
+np.save('./processing_metadata_fitting/australian_rfccombination_postive_data.npy', positive_data)
+np.save('./processing_metadata_fitting/australian_rfccombination_negative_data.npy', negative_data)
