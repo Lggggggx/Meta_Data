@@ -518,7 +518,7 @@ class QueryMetaData_combination():
                 self.modelOutput_5.append(np.zeros(n_samples))          
         self.flag = True
 
-    def select(self, label_index, unlabel_index, model=None):
+    def select(self, label_index, unlabel_index, model=None, xb_way='uncertainty'):
         """Select indexes from the unlabel_index for querying.
 
         Parameters
@@ -548,8 +548,14 @@ class QueryMetaData_combination():
 
         # select x^ by unncertainty for combining the [x*, x^] c_data
         # using uncertainty to select x^
-        un = QueryInstanceUncertainty(self.X, self.y)
-        un_selectedind = un.select(label_ind, unlabel_ind, model)
+        if xb_way is 'uncertainty':
+            un = QueryInstanceUncertainty(self.X, self.y)
+            selectedind = un.select(label_ind, unlabel_ind, model)
+        elif xb_way is 'random':
+            rand = QueryRandom(self.X, self.y)
+            selectedind = rand.select(label_ind, unlabel_ind)
+        else:
+            raise Exception('calculating the xb at least one of [uncertrainty, random]')
 
         # using random to select x^
         # rand = QueryRandom(self.X, self.y)
@@ -566,7 +572,7 @@ class QueryMetaData_combination():
         #     u_ind = copy.deepcopy(self.unlabel_inds_5[4])
         #     l_ind.
 
-        metadata_unind = np.where(self.unlabel_inds_5[4] == un_selectedind)[0][0]
+        metadata_unind = np.where(self.unlabel_inds_5[4] == selectedind)[0][0]
         cd_second = metadata[metadata_unind]
         num_unlabeled = len(metadata)
         cd_second = np.tile(cd_second, [num_unlabeled, 1])
