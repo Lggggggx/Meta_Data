@@ -176,7 +176,7 @@ for testdataset in testdatasetnames:
 
     # the regression way
     rfr_regression_result = []
-    for round in range(10):
+    for round in range(splitcount):
 
         meta_query = QueryMetaData(X, y, rfr_meta)
         # Get the data split of one fold experiment
@@ -216,7 +216,7 @@ for testdataset in testdatasetnames:
     
     # the classify way 
     rfc_classify_result = []
-    for round in range(10):
+    for round in range(splitcount):
 
         meta_query = QueryMetaData_classify(X, y, rfc_meta)
         # Get the data split of one fold experiment
@@ -256,7 +256,7 @@ for testdataset in testdatasetnames:
 
     # the classify way 
     lr_classify_result = []
-    for round in range(10):
+    for round in range(splitcount):
 
         meta_query = QueryMetaData_classify(X, y, lr_meta)
         # Get the data split of one fold experiment
@@ -303,6 +303,4 @@ for testdataset in testdatasetnames:
     analyser.add_method(method_name='rfc_classify', method_results=rfc_classify_result)
     analyser.add_method(method_name='lr_classify', method_results=lr_classify_result)
 
-
-
-    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path=savefloder_path + testdataset +'/')
+    analyser.plot_learning_curves(title=testdataset, std_area=False, saving_path=savefloder_path + testdataset +'/', show=False)

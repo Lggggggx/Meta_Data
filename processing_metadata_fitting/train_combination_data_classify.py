@@ -9,8 +9,8 @@ from sklearn.model_selection import ShuffleSplit
 from sklearn.metrics import accuracy_score
 from sklearn.externals import joblib
 
-positive_cdata = np.load('./processing_metadata_fitting/combination_postive_data.npy')
-negative_data = np.load('./processing_metadata_fitting/combination_negative_data.npy')
+positive_cdata = np.load('./processing_metadata_fitting/australian_rfccombination_postive_data.npy')
+negative_data = np.load('./processing_metadata_fitting/australian_rfccombination_negative_data.npy')
 
 # print(positive_cdata[0:3])
 # print(negative_data[0:3])
@@ -23,7 +23,7 @@ y = c_data[:, 792]
 lr = LogisticRegression()
 lr.fit(X, y)
 print(lr.score(X, y))
-joblib.dump(lr, './processing_metadata_fitting/lr_cdata.joblib')
+joblib.dump(lr, './processing_metadata_fitting/australian_rfc_lr_cdata.joblib')
 
 # split = ShuffleSplit(n_splits=1, train_size=0.3)
 
@@ -66,6 +66,3 @@ joblib.dump(lr, './processing_metadata_fitting/lr_cdata.joblib')
 #     print(np.mean(rfr_pred_prob[:,1]))
 #     print(np.std(rfr_pred_prob[:,1]))
 #     print(len(np.where(rfr_pred_prob[:,1] == 1)[0]))
-
-
-
