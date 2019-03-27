@@ -22,7 +22,7 @@ dataset_path = './newdata/'
 #   'statlog-german-credit', 'statlog-heart',
 #  'texture', 'tic-tac-toe', 'titanic', 'twonorm', 'vehicle',
 #   'wdbc']
-
+#  
 testdatasetnames = [ 'australian', 'clean1', 'ethn', 'blood', 'breast-cancer-wisc', 'wdbc']
  
 splitcount = 5
@@ -37,8 +37,8 @@ savefloder_path = './experiment_result/combination_classify/australian_lrmetadat
 # metadata regressior
 cd_lr = joblib.load('./processing_metadata_fitting/lr_cdata.joblib')
 rfr_meta = joblib.load('./newmetadata/rfr_p_regression_australian.joblib')
-rfc_meta = joblib.load('./newmetadata/rfc_p_classify_australian.joblib')
-lr_meta = joblib.load('./newmetadata/lr_p_classify_australian.joblib')
+# rfc_meta = joblib.load('./newmetadata/rfc_p_classify_australian.joblib')
+# lr_meta = joblib.load('./newmetadata/lr_p_classify_australian.joblib')
 # Use the default Logistic Regression classifier
 model = LogisticRegression(solver='lbfgs')
 # model = RandomForestClassifier()
@@ -111,9 +111,10 @@ for testdataset in testdatasetnames:
         #     label_ind.update(rand_select_ind)
         #     unlab_ind.difference_update(rand_select_ind)
         #     model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
-        label_ind = label_index_round[round][4]
-        unlab_ind = unlabel_index_round[round][4]
+        label_ind = copy.deepcopy(label_index_round[round][4])
+        unlab_ind = copy.deepcopy(unlabel_index_round[round][4])
 
+        model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
         pred = model.predict(X[test_idx, :])
         accuracy = sum(pred == y[test_idx]) / len(test_idx)
         saver.set_initial_point(accuracy)
@@ -165,12 +166,14 @@ for testdataset in testdatasetnames:
     lr_cdata_unc_result = []
     for round in range(splitcount):
 
-        meta_query = QueryMetaData_combination(X, y, cd_lr, label_index_round[round], unlabel_index_round[round], model_output_round[round])
+        meta_query = QueryMetaData_combination(X, y, cd_lr, copy.deepcopy(label_index_round[round]), copy.deepcopy(unlabel_index_round[round]), copy.deepcopy(model_output_round[round]))
         # Get the data split of one fold experiment
-        train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
+        train_idx, test_idx, label_ind__, unlab_ind__ = alibox.get_split(round)
         # Get intermediate results saver for one fold experiment
         saver = alibox.get_stateio(round)
         # calc the initial point
+        label_ind = copy.deepcopy(label_index_round[round][4])
+        unlab_ind = copy.deepcopy(unlabel_index_round[round][4])
         model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
         pred = model.predict(X[test_idx, :])
         accuracy = sum(pred == y[test_idx]) / len(test_idx)
@@ -210,12 +213,14 @@ for testdataset in testdatasetnames:
     lr_cdata_random_result = []
     for round in range(splitcount):
 
-        meta_query = QueryMetaData_combination(X, y, cd_lr, label_index_round[round], unlabel_index_round[round], model_output_round[round])
+        meta_query = QueryMetaData_combination(X, y, cd_lr, copy.deepcopy(label_index_round[round]), copy.deepcopy(unlabel_index_round[round]), copy.deepcopy(model_output_round[round]))
         # Get the data split of one fold experiment
         train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
         # Get intermediate results saver for one fold experiment
         saver = alibox.get_stateio(round)
         # calc the initial point
+        label_ind = copy.deepcopy(label_index_round[round][4])
+        unlab_ind = copy.deepcopy(unlabel_index_round[round][4])
         model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
         pred = model.predict(X[test_idx, :])
         accuracy = sum(pred == y[test_idx]) / len(test_idx)
@@ -229,7 +234,7 @@ for testdataset in testdatasetnames:
             # label_ind.update(select_ind)
             # unlab_ind.difference_update(select_ind)
 
-            select_ind, after_select_label_ind, after_select_unlabel_ind = meta_query.select(label_ind, unlab_ind, model)
+            select_ind, after_select_label_ind, after_select_unlabel_ind = meta_query.select(label_ind, unlab_ind, model, xb_way='random')
 
             # print('the len of after_select_label_ind is {0}'.format(len(after_select_label_ind)))
             # Update model and calc performance according to the model you are using
@@ -255,12 +260,14 @@ for testdataset in testdatasetnames:
     rfr_regression_result = []
     for round in range(splitcount):
 
-        meta_query = QueryMetaData(X, y, rfr_meta, label_index_round[round], unlabel_index_round[round], model_output_round[round])
+        meta_query = QueryMetaData(X, y, rfr_meta, copy.deepcopy(label_index_round[round]), copy.deepcopy(unlabel_index_round[round]), copy.deepcopy(model_output_round[round]))
         # Get the data split of one fold experiment
         train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
         # Get intermediate results saver for one fold experiment
         saver = alibox.get_stateio(round)
         # calc the initial point
+        label_ind = copy.deepcopy(label_index_round[round][4])
+        unlab_ind = copy.deepcopy(unlabel_index_round[round][4])
         model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
         pred = model.predict(X[test_idx, :])
         accuracy = sum(pred == y[test_idx]) / len(test_idx)
