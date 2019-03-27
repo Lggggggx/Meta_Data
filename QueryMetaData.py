@@ -553,7 +553,7 @@ class QueryMetaData_combination():
             selectedind = un.select(label_ind, unlabel_ind, model)
         elif xb_way is 'random':
             rand = QueryRandom(self.X, self.y)
-            selectedind = rand.select(label_ind, unlabel_ind)
+            selectedind = rand.select(label_ind, unlabel_ind)[0]
         else:
             raise Exception('calculating the xb at least one of [uncertrainty, random]')
 
@@ -572,7 +572,9 @@ class QueryMetaData_combination():
         #     u_ind = copy.deepcopy(self.unlabel_inds_5[4])
         #     l_ind.
 
-        metadata_unind = np.where(self.unlabel_inds_5[4] == selectedind)[0][0]
+        # metadata_unind = np.where(self.unlabel_inds_5[4] == selectedind)[0][0]
+
+        metadata_unind = np.where(unlabel_ind == selectedind)[0][0]
         cd_second = metadata[metadata_unind]
         num_unlabeled = len(metadata)
         cd_second = np.tile(cd_second, [num_unlabeled, 1])
