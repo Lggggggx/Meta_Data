@@ -1,3 +1,7 @@
+import warnings
+# warnings.filterwarnings("ignore")
+warnings.simplefilter("ignore")
+
 import numpy as np 
 
 from sklearn.svm import SVR, SVC
@@ -6,15 +10,13 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.metrics import accuracy_score, r2_score, mean_squared_error, mean_absolute_error
 from sklearn.model_selection import cross_val_score
 
-import warnings
-warnings.filterwarnings("ignore")
-warnings.simplefilter("ignore")
 
-metadata = np.load('./origin_metadata/australian_rfc_metadata.npy')
+
+metadata = np.load('./simple_metadata/simple_australian_rfc_metadata.npy')
 print(np.shape(metadata))
 
-X = metadata[:, 0:396]
-y = metadata[:, 396]
+X = metadata[:, 0:95]
+y = metadata[:, 95]
 
 print('y max: ', np.max(y))
 print('y min: ', np.min(y))
@@ -46,14 +48,23 @@ classifier_list = [lor, rfc]
 
 
 threshold = np.arange(0.01, 0.21, 0.01)
-# svr_score = []
-lr_score = []
-sgdr_score = []
-rfr_score = []
+# svr_score_r2 = []
+lr_score_r2 = []
+sgdr_score_r2 = []
+rfr_score_r2 = []
+# svr_score_mae = []
+lr_score_mae = []
+sgdr_score_mae = []
+rfr_score_mae = []
 
-lor_score = []
-# svc_score = []
-rfc_score = []
+
+lor_score_ac = []
+# svc_score_ac = []
+rfc_score_ac = []
+
+lor_score_pre = []
+# svc_score_pre = []
+rfc_score_pre = []
 
 for t in threshold:
     print('***********currently threshold is : ', t)
@@ -69,42 +80,54 @@ for t in threshold:
 
     for regressor in regressor_list:
         print('############currently regressor model is : ', regressor)
-        # cross_score = cross_val_score(regressor, new_X, new_y, cv=5, scoring='r2', n_jobs=4) 
+        cross_score_r2 = cross_val_score(regressor, new_X, new_y, cv=5, scoring='r2', n_jobs=3) 
         # cross_score = cross_val_score(regressor, new_X, new_y, cv=5, scoring='r2') 
-        cross_score = cross_val_score(regressor, new_X, new_y, cv=5, scoring='neg_mean_absolute_error') 
+        cross_score_mae = cross_val_score(regressor, new_X, new_y, cv=5, scoring='neg_mean_absolute_error', n_jobs=3) 
         
-        mean_score = np.mean(cross_score) 
+        mean_score_r2 = np.mean(cross_score_r2) 
+        mean_score_mae = np.mean(cross_score_mae) 
+
         # if isinstance(regressor, SVR):
         #     svr_score.append(mean_score)
         if isinstance(regressor, LinearRegression):
-            lr_score.append(mean_score)
+            lr_score_r2.append(mean_score_r2)
+            lr_score_mae.append(mean_score_mae)
         if isinstance(regressor, SGDRegressor):
-            sgdr_score.append(mean_score)
+            sgdr_score_r2.append(mean_score_r2)
+            sgdr_score_mae.append(mean_score_mae)
         if isinstance(regressor, RandomForestRegressor):
-            rfr_score.append(mean_score)        
-        print('the r2_score is : ', mean_score)
+            rfr_score_r2.append(mean_score_r2)   
+            rfr_score_mae.append(mean_score_mae)     
+        print('the r2_score is : ', mean_score_r2)
+        print('the mae_score is : ', mean_score_mae)
 
-    process_metadata[0:len(np.where(y>=t)[0]), 396] = 1
-    process_metadata[len(np.where(y>=t)[0]):, 396] = -1
+
+    process_metadata[0:len(np.where(y>=t)[0]), 95] = 1
+    process_metadata[len(np.where(y>=t)[0]):, 95] = -1
     np.random.shuffle(process_metadata)
     for classifier in classifier_list:
         print('############currently classifier model is : ', classifier)
         # cross_score = cross_val_score(classifier, process_metadata[:, 0:396], process_metadata[:, 396], cv=5, scoring='accuracy', n_jobs=4)
-        # cross_score = cross_val_score(classifier, process_metadata[:, 0:396], process_metadata[:, 396], cv=5, scoring='accuracy') 
-        cross_score = cross_val_score(classifier, process_metadata[:, 0:396], process_metadata[:, 396], cv=5, scoring='precision') 
+        cross_score_ac = cross_val_score(classifier, process_metadata[:, 0:95], process_metadata[:, 95], cv=5, scoring='accuracy', n_jobs=3) 
+        cross_score_pre = cross_val_score(classifier, process_metadata[:, 0:95], process_metadata[:, 95], cv=5, scoring='precision', n_jobs=3) 
 
 
-        mean_accuracy = np.mean(cross_score)
+        mean_accuracy_ac = np.mean(cross_score_ac)
+        mean_cross_score_pre = np.mean(cross_score_pre)
         if isinstance(classifier, LogisticRegression):
-            lor_score.append(mean_accuracy)
+            lor_score_ac.append(mean_accuracy_ac)
+            lor_score_pre.append(mean_cross_score_pre)
         # if isinstance(classifier, SVC):
         #     svc_score.append(mean_accuracy)
         if isinstance(classifier, RandomForestClassifier):
-            rfc_score.append(mean_accuracy)          
-        print('the accuracy is : ', mean_accuracy)       
+            rfc_score_ac.append(mean_accuracy_ac)  
+            rfc_score_pre.append(mean_cross_score_pre)        
+        print('the accuracy is : ', mean_accuracy_ac)     
+        print('the accuracy is : ', mean_cross_score_pre)       
 
-regressor_scorelist = np.vstack((threshold, lr_score, sgdr_score, rfr_score))
-classifier_scorelist = np.vstack((threshold, lor_score, rfc_score))
 
-np.savetxt('./processing_metadata_fitting/australian_rfc_regressor_scorelist_mae', regressor_scorelist, delimiter='    ')
-np.savetxt('./processing_metadata_fitting/australian_rfc_classifier_scorelist_precision', classifier_scorelist, delimiter='    ')
+regressor_scorelist = np.vstack((threshold, lr_score_r2, sgdr_score_r2, rfr_score_r2, np.zeros_like(threshold), lr_score_mae, sgdr_score_mae, rfr_score_mae))
+classifier_scorelist = np.vstack((threshold, lor_score_ac, rfc_score_ac, np.zeros_like(threshold), lor_score_pre, rfc_score_pre))
+
+np.savetxt('./processing_metadata_fitting/simple_australian_rfc_regressor_scorelist_mae', regressor_scorelist, delimiter='    ')
+np.savetxt('./processing_metadata_fitting/simple_australian_rfc_classifier_scorelist_precision', classifier_scorelist, delimiter='    ')
