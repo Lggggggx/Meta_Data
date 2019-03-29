@@ -420,6 +420,76 @@ class DataSet():
                 unlabel_idx=unlabel_idx, n_labelled=n_labelled, path=saving_path)
         return train_idx, test_idx, label_idx, unlabel_idx
 
+    def split_data_by_nlabelled_fulldataset(self, n_labelled, test_ratio=0.5, split_count=10, saving_path=None):
+        """
+        n_labelled: int 
+            The number of the inital labelled samples.
+        test_ration: float 
+            The ratio of the test dataset.
+
+        Returns
+        -------
+        train_idx: list
+            index of training set, shape like [n_split_count, n_training_indexes]
+
+        test_idx: list
+            index of testing set, shape like [n_split_count, n_testing_indexes]
+
+        label_idx: list
+            index of labeling set, shape like [n_split_count, n_labeling_indexes]
+
+        unlabel_idx: list
+            index of unlabeling set, shape like [n_split_count, n_unlabeling_indexes]        
+        """
+
+        # check parameters
+        len_of_parameters = [len(self.X) if self.X is not None else None, len(self.y) if self.y is not None else None]
+        number_of_instance = np.unique([i for i in len_of_parameters if i is not None])
+        if len(number_of_instance) > 1:
+            raise ValueError("Different length of instances and _labels found.")
+        else:
+            number_of_instance = number_of_instance[0]
+        
+        positive_ind = np.where(self.y == 1)[0]
+        negative_ind = np.where(self.y == -1)[0]
+        # split
+        train_idx = []
+        test_idx = []
+        label_idx = []
+        unlabel_idx = []
+        for i in range(split_count):
+
+            index_positive1 = np.random.permutation(positive_ind)
+            index_negative1 = np.random.permutation(negative_ind)
+
+            tp_labelled = np.r_[index_positive1[0], index_negative1[0]]
+            index_restall = np.r_[index_positive1[1:], index_negative1[1:]]
+            index_restall = np.random.permutation(index_restall)
+            cutpoint = int((1 - test_ratio) * len(index_restall))
+            if cutpoint <= 1:
+                cutpoint = 1
+            
+            tp_test = index_restall[cutpoint:]
+            tp_train = np.r_[tp_labelled, index_restall[0:cutpoint]]
+            if n_labelled >= 2:
+                if (n_labelled - 3)> cutpoint: 
+                    tp_labelled = np.r_[tp_labelled, index_restall[0:cutpoint-1]]
+                    tp_unlabelled = index_restall[cutpoint-1]
+                else:
+                    tp_labelled = np.r_[tp_labelled, index_restall[0:n_labelled-2]]
+                    tp_unlabelled = index_restall[n_labelled-2:cutpoint]
+
+            test_idx.append(tp_test)
+            train_idx.append(tp_train)
+            label_idx.append(tp_labelled)
+            unlabel_idx.append(tp_unlabelled)
+            
+        if saving_path is not None:
+            self.split_nlabelled_save(train_idx=train_idx, test_idx=test_idx, label_idx=label_idx,
+                unlabel_idx=unlabel_idx, n_labelled=n_labelled, path=saving_path)
+
+        return train_idx, test_idx, label_idx, unlabel_idx
+
     def split_load(self, path, datasetname, initial_label_rate):
         """Load split from path.
 
