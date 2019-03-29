@@ -22,8 +22,8 @@ dataset_path = './newdata/'
 #   'statlog-german-credit', 'statlog-heart',
 #  'texture', 'tic-tac-toe', 'titanic', 'twonorm', 'vehicle',
 #   'wdbc']
-#  'australian', 'clean1', 'ethn', 'blood', 
-testdatasetnames = [ 'breast-cancer-wisc', 'wdbc']
+#  'australian', 'clean1', 'ethn', 'blood', 'breast-cancer-wisc', 'wdbc'
+testdatasetnames = ['ethn' ]
  
 splitcount = 5
 
@@ -306,12 +306,14 @@ for testdataset in testdatasetnames:
     rfc_classify_result = []
     for round in range(splitcount):
 
-        meta_query = QueryMetaData_classify(X, y, rfc_meta)
+        meta_query = QueryMetaData_classify(X, y, rfc_meta, copy.deepcopy(label_index_round[round]), copy.deepcopy(unlabel_index_round[round]), copy.deepcopy(model_output_round[round]))
         # Get the data split of one fold experiment
         train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
         # Get intermediate results saver for one fold experiment
         saver = alibox.get_stateio(round)
         # calc the initial point
+        label_ind = copy.deepcopy(label_index_round[round][4])
+        unlab_ind = copy.deepcopy(unlabel_index_round[round][4])
         model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
         pred = model.predict(X[test_idx, :])
         accuracy = sum(pred == y[test_idx]) / len(test_idx)
@@ -346,12 +348,14 @@ for testdataset in testdatasetnames:
     # lr_classify_result = []
     # for round in range(splitcount):
 
-    #     meta_query = QueryMetaData_classify(X, y, lr_meta)
+    #     meta_query = QueryMetaData_classify(X, y, lr_meta, copy.deepcopy(label_index_round[round]), copy.deepcopy(unlabel_index_round[round]), copy.deepcopy(model_output_round[round]))
     #     # Get the data split of one fold experiment
     #     train_idx, test_idx, label_ind, unlab_ind = alibox.get_split(round)
     #     # Get intermediate results saver for one fold experiment
     #     saver = alibox.get_stateio(round)
     #     # calc the initial point
+        # label_ind = copy.deepcopy(label_index_round[round][4])
+        # unlab_ind = copy.deepcopy(unlabel_index_round[round][4])
     #     model.fit(X=X[label_ind.index, :], y=y[label_ind.index])
     #     pred = model.predict(X[test_idx, :])
     #     accuracy = sum(pred == y[test_idx]) / len(test_idx)

@@ -3,7 +3,7 @@ import numpy as np
 import warnings
 warnings.filterwarnings("ignore")
 
-from meta_data import DataSet, mate_data, model_select, cal_mate_data, cal_mate_data_sequence
+from meta_data import DataSet, meta_data, model_select, cal_meta_data, cal_meta_data_sequence
 
 if __name__ == "__main__":
     
@@ -44,14 +44,14 @@ if __name__ == "__main__":
 
                 trains, tests, label_inds, unlabel_inds = dataset.split_load(path='./split_info',
                     datasetname=datasetname, initial_label_rate=i_l_r)
-                # meta_data = cal_mate_data(X, y, distacne, cluster_center_index, modelnames,  
+                # meta_data = cal_meta_data(X, y, distacne, cluster_center_index, modelnames,  
                 #     trains, tests, label_inds, unlabel_inds, split_count, num_xjselect)
                 # if metadata is None:
                 #     metadata = meta_data
                 # else:
                 #     metadata = np.vstack((metadata, meta_data))
                 for t in range(split_count):
-                    meta_data = cal_mate_data_sequence(X, y, distacne, cluster_center_index, modelnames,  
+                    meta_data = cal_meta_data_sequence(X, y, distacne, cluster_center_index, modelnames,  
                     tests[t], label_inds[t], unlabel_inds[t], t, num_xjselect)
                     if metadata is None:
                         metadata = meta_data
@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
             #     trains, tests, label_inds, unlabel_inds = dataset.split_load(path='./split_info',
             #             datasetname=datasetname, initial_label_rate=i_l_r)
-            #     # meta_data = cal_mate_data(X, y, distacne, cluster_center_index, modelnames,  
+            #     # meta_data = cal_meta_data(X, y, distacne, cluster_center_index, modelnames,  
             #     #     trains, tests, label_inds, unlabel_inds, split_count, num_xjselect)
             #     # if metadata is None:
             #     #     metadata = meta_data
@@ -72,7 +72,7 @@ if __name__ == "__main__":
             #     #     metadata = np.vstack((metadata, meta_data))
 
             #     for t in range(split_count):
-            #         meta_data = cal_mate_data_sequence(X, y, distacne, cluster_center_index, modelnames,  
+            #         meta_data = cal_meta_data_sequence(X, y, distacne, cluster_center_index, modelnames,  
             #         tests[t], label_inds[t], unlabel_inds[t], t, num_xjselect)
             #         if metadata is None:
             #             metadata = meta_data
@@ -82,7 +82,7 @@ if __name__ == "__main__":
             for n_labelled in n_labelleds:
                 trains, tests, label_inds, unlabel_inds = dataset.split_data_by_nlabelled(n_labelled, test_ratio=0.6, split_count=split_count, saving_path='./n_labelled_split_info')
                 for t in range(split_count):
-                    meta_data = cal_mate_data_sequence(X, y, distacne, cluster_center_index, modelnames,  
+                    meta_data = cal_meta_data_sequence(X, y, distacne, cluster_center_index, modelnames,  
                      tests[t], label_inds[t], unlabel_inds[t], t, num_xjselect)
                     if metadata is None:
                         metadata = meta_data
