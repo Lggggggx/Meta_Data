@@ -334,7 +334,7 @@ class QueryMetaData_classify():
             metareg_predict_prob = self.metaregressor.decision_function(metadata)
         else:
             raise Exception('the meta classifier has to have the perdict_proba or decision_function')
-            
+        
 
         # print('len(metareg_predict_prob) ',len(metareg_predict_prob))
 
