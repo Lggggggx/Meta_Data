@@ -328,7 +328,13 @@ class QueryMetaData_classify():
         metadata = self.cal_mate_data_Z(self.label_inds_5, self.unlabel_inds_5, self.modelOutput_5, model)
 
         # metareg_perdict = self.metaregressor.predict(metadata)
-        metareg_predict_prob = self.metaregressor.predict_proba(metadata)[:, 1]
+        if hasattr(self.metaregressor, 'predict_proba'):
+            metareg_predict_prob = self.metaregressor.predict_proba(metadata)[:, 1]
+        elif hasattr(self.metaregressor, 'decision_function'):
+            metareg_predict_prob = self.metaregressor.decision_function(metadata)
+        else:
+            raise Exception('the meta classifier has to have the perdict_proba or decision_function')
+            
 
         # print('len(metareg_predict_prob) ',len(metareg_predict_prob))
 
