@@ -1219,7 +1219,7 @@ def cal_meta_data_sequence(X, y, distacne, cluster_center_index, modelnames, tes
         for k in range(num_models):
             model = models[k]
             # Repeated many(20) times in the same model and split
-            for _ in range(3):
+            for _ in range(20):
 
                 # genearte five rounds before
                 l_ind = copy.deepcopy(label_ind)

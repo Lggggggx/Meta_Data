@@ -100,10 +100,12 @@ y_test[np.where(y_test<=0)] = -1
 total_vect_time = 0.0
 
 for i, (X_train, y_train) in enumerate(minibatch_train_iterators):
+    print('~~~~~~~~~~~the number of this time train samples is {}'.format(X_train.shape[0]))
     
     for cls_name, cls in partial_fit_classifiers.items():
         tick = time.time()
         # update estimator with examples in the current mini-batch
+
         cls.partial_fit(X_train, y_train, classes=all_classes)
 
         # accumulate test accuracy stats
@@ -129,4 +131,4 @@ for i, (X_train, y_train) in enumerate(minibatch_train_iterators):
     # print("{} time".format(i))  
     # print("{} score".format(sgd_clf.score(X_test, y_test)))  
 
-joblib.dump(partial_fit_classifiers, './partial_fit_classifiers.joblib')
+# joblib.dump(partial_fit_classifiers, './partial_fit_classifiers.joblib')

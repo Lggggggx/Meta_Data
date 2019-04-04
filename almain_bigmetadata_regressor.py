@@ -22,8 +22,8 @@ dataset_path = './newdata/'
 #   'statlog-german-credit', 'statlog-heart',
 #  'texture', 'tic-tac-toe', 'titanic', 'twonorm', 'vehicle',
 #   'wdbc']
-#  , 'clean1', 'ethn', 'blood', 'breast-cancer-wisc', 
-testdatasetnames = ['wdbc', 'ethn', 'australian']
+#  'ethn', 'australian', 'ethn', , 'wdbc', 
+testdatasetnames = ['clean1', 'blood', 'breast-cancer-wisc']
  
 splitcount = 5
 
