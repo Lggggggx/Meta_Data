@@ -19,4 +19,8 @@ def mkdir(path):
 testdatasetnames = ['wdbc', 'clean1', 'ethn', 'australian', 'blood', 'breast-cancer-wisc']
 
 for name in testdatasetnames:
-    mkdir('./experiment_result/bigmetadata/australian_lrmetadata_0.01/'+name+'/')
+    # mkdir('./experiment_result/bigmetadata/wdbc_lrmetadata_0.005/big59_diff_query_time/'+name+'/')
+    mkdir('./experiment_result/ridge_regressor/qt50_7_210000/australian_lrmetadata_0.01/'+name+'/')
+
+    # mkdir('./experiment_result/auto-sklearn/regressor/australian_lrmetadata_0.01/'+name+'/')
+

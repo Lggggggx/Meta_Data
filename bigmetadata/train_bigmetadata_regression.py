@@ -1,7 +1,7 @@
 from __future__ import print_function
 from glob import glob
 import itertools
-import os.path
+import os
 import re
 import tarfile
 import time
@@ -71,29 +71,51 @@ from sklearn.externals import joblib
 all_classes = np.array([-1, 1])
 
 dataset_name = 'australian'
-sgd_regressor = SGDRegressor()
+# sgd_regressor = SGDRegressor()
+sgd_regressor = SGDRegressor(learning_rate='invscaling', alpha=0.0001, eta0=0.005, loss='huber')
 
-test_metadata = np.load('../origin_metadata/australian_lr_metadata.npy')
-X_test = test_metadata[:, 0:396]
-y_test = test_metadata[:, 396]
+# test_metadata = np.load('')
+
+# X_test = test_metadata[:, 0:396]
+# y_test = test_metadata[:, 396]
 
 total_vect_time = 0.0
 
 def iter_minibatches():
-    for num in range(2, 62, 2):
-        # X = np.array([])
-        # y = np.array([])
-        metadata = np.load('./australian/'+str(num)+'australian_big_metadata.npy')
-        X = metadata[:, 0:396]
-        y = metadata[:, 396]
-        yield X, y
-        # X = np.array([])
-        # y = np.array([])
+
+    # for num in range(2, 62, 2):
+    #     # X = np.array([])
+    #     # y = np.array([])
+    #     
+
+    #     
+
+    #     metadata = np.load(str(num)+'australian_big_metadata.npy')
+    #     X = metadata[:, 0:396]						
+    #     y = metadata[:, 396]
+    #     yield X, y
+    #     # X = np.array([])
+    #     # y = np.array([])
+    # metadata_dir = 'D:/generate_metadata/bigmetadata/wdbc/query_time/query_time_5interval/query_time110/'
+    # metadata_dir = 'C:/Users/31236/Desktop/meta_data/bigmetadata/australian/'
+    # metadata_dir = 'F:/australian/'
+
+    # metadata_dir = 'E:/australian/model1/split_count50/'
+    metadata_dir = 'E:/australian/model1//query_time300/'
+
+    for root, dirs, files in os.walk(metadata_dir):
+        for file in files:
+            print(metadata_dir+file)
+            metadata = np.load(metadata_dir+file)
+            X = metadata[:, 0:396]					
+            y = metadata[:, 396]
+            yield X, y
+
 
 minibatch_train_iterators = iter_minibatches()
 
-for i, (X_train, y_train) in enumerate(minibatch_train_iterators):
-    print('the number of this time train samples is {}'.format(X_train.shape[0]))
+# for i, (X_train, y_train) in enumerate(minibatch_train_iterators):
+#     print('the number of this time train samples is {}'.format(X_train.shape[0]))
     
 #     for cls_name, cls in partial_fit_regressor.items():
 #         tick = time.time()
@@ -125,15 +147,17 @@ for i, (X_train, y_train) in enumerate(minibatch_train_iterators):
 
 # joblib.dump(partial_fit_regressor, './partial_fit_regressor.joblib')
 
-# for i, (X_train, y_train) in enumerate(minibatch_train_iterators):
-#     tick = time.time()
-#     print('###########{}`th round training'.format(i))
-#     print('the number of this time train samples is {}'.format(X_train.shape[0]))
-# #     sgd_regressor.partial_fit(X_train, y_train)
-#     training_time = time.time() - tick
-#     print('the time of current round traing is {}'.format(training_time))
-#     total_vect_time +=training_time
-#     print('the score(r2) on the test dataset is {}'.format(sgd_regressor.score(X_test, y_test)))
+for i, (X_train, y_train) in enumerate(minibatch_train_iterators):
+    tick = time.time()
+    print('###########{}`th round training'.format(i))
+    print('the number of this time train samples is {}'.format(X_train.shape[0]))
+    sgd_regressor.partial_fit(X_train, y_train)
+    training_time = time.time() - tick
+    print('the time of current round traing is {}'.format(training_time))
+    total_vect_time +=training_time
+    print('the score(r2) on the test dataset is {}'.format(sgd_regressor.score(X_train[0:1000,:], y_train[0:1000])))
 
 print('*******training is done')
-# joblib.dump(sgd_regressor, './australian_big_regressor.joblib')
+# joblib.dump(sgd_regressor, './australian_s-c-50-inter2-regressor.joblib')
+joblib.dump(sgd_regressor, './australian_q-t-300-inter2-regressor.joblib')
+# joblib.dump(sgd_regressor, './australian_origin_regressor.joblib')

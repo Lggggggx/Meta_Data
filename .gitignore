@@ -21,6 +21,7 @@ dataset_splitinfo.py
 *.png
 *.jpg
 *.joblib
+*.pth
 smalldataset_splitinfo
 experiment_result
 processing_metadata_fitting/classifier_scorelist_precision

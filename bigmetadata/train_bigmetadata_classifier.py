@@ -18,19 +18,6 @@ from sklearn.naive_bayes import MultinomialNB
 
 from sklearn.externals import joblib
 
-# temp_metadata = np.load('./wdbc_lr/0_wdbc_big_metadata.npy')
-# print(np.shape(temp_metadata))
-
-
-def progress(cls_name, stats):
-    """Report progress information, return a string."""
-    duration = time.time() - stats['t0']
-    s = "%20s classifier : \t" % cls_name
-    s += "%(n_train)6d train docs (%(n_train_pos)6d positive) " % stats
-    s += "%(n_test)6d test docs (%(n_test_pos)6d positive) " % test_stats
-    s += "accuracy: %(accuracy).3f " % stats
-    s += "in %.2fs (%5d docs/s)" % (duration, stats['n_train'] / duration)
-    return s
 
 # # Here are some classifiers that support the `partial_fit` method
 partial_fit_classifiers = {
@@ -40,52 +27,41 @@ partial_fit_classifiers = {
     'Passive-Aggressive': PassiveAggressiveClassifier(tol=1e-3),
 }
 
-cls_stats = {}
-for cls_name in partial_fit_classifiers:
-    stats = {'n_train': 0, 'n_train_pos': 0,
-             'accuracy': 0.0, 'accuracy_history': [(0, 0)], 't0': time.time(),
-             'runtime_history': [(0, 0)], 'total_fit_time': 0.0}
-    cls_stats[cls_name] = stats
-
-# test data statistics
-test_stats = {'n_test': 0, 'n_test_pos': 0}
-
-# def get_minibatch(doc_iter, size, pos_class=positive_class):
-#     """Extract a minibatch of examples, return a tuple X_text, y.
-
-#     Note: size is before excluding invalid docs with no topics assigned.
-
-#     """
-#     data = [(u'{title}\n\n{body}'.format(**doc), pos_class in doc['topics'])
-#             for doc in itertools.islice(doc_iter, size)
-#             if doc['topics']]
-#     if not len(data):
-#         return np.asarray([], dtype=int), np.asarray([], dtype=int)
-#     X_text, y = zip(*data)
-#     return X_text, np.asarray(y, dtype=int)
-
-
-# def iter_minibatches(doc_iter, minibatch_size):
-#     """Generator of minibatches."""
-#     X_text, y = get_minibatch(doc_iter, minibatch_size)
-#     while len(X_text):
-#         yield X_text, y
-#         X_text, y = get_minibatch(doc_iter, minibatch_size)
 all_classes = np.array([-1, 1])
 
 def iter_minibatches():
-    for num in range(30):
-        X = np.array([])
-        y = np.array([])
-        metadata = np.load('./wdbc_lr/'+str(num)+'_wdbc_big_metadata.npy')
-        num +=1
-        X = metadata[:, 0:396]
-        y = metadata[:, 396]
-        y[np.where(y>0)] = 1
-        y[np.where(y<=0)] = -1
-        yield X, y
-        X = np.array([])
-        y = np.array([])
+    # for num in range(30):
+    #     X = np.array([])
+    #     y = np.array([])
+    #     metadata = np.load('./wdbc_lr/'+str(num)+'_wdbc_big_metadata.npy')
+    #     X = metadata[:, 0:396]
+    #     y = metadata[:, 396]
+    #     new_X = X[np.where(y>=0.01)[0]]
+    #     new_X = np.vstack((new_X, X[np.where(y<= -0.01)[0]]))
+    #     new_y = y[np.where(y>=0.01)[0]]
+    #     new_y = np.append(new_y, y[np.where(y<=-0.01)[0]])
+    #     new_y[np.where(new_y>0)] = 1
+    #     new_y[np.where(new_y<=0)] = -1
+
+    #     yield new_X, new_y
+
+    metadata_dir = 'D:/generate_metadata/bigmetadata/wdbc/query_time/query_time_5interval/query_time110/'
+    for root, dirs, files in os.walk(metadata_dir):
+        for file in files:
+            print(metadata_dir+file)
+            metadata = np.load(metadata_dir+file)
+            X = metadata[:, 0:396]
+            y = metadata[:, 396]
+            new_X = X[np.where(y>=0.01)[0]]
+            new_X = np.vstack((new_X, X[np.where(y<= -0.01)[0]]))
+            new_y = y[np.where(y>=0.01)[0]]
+            new_y = np.append(new_y, y[np.where(y<=-0.01)[0]])
+            new_y[np.where(new_y>0)] = 1
+            new_y[np.where(new_y<=0)] = -1
+
+            yield new_X, new_y
+    
+
 
 # sgd_clf = SGDClassifier()
 
@@ -132,3 +108,4 @@ for i, (X_train, y_train) in enumerate(minibatch_train_iterators):
     # print("{} score".format(sgd_clf.score(X_test, y_test)))  
 
 # joblib.dump(partial_fit_classifiers, './partial_fit_classifiers.joblib')
+
